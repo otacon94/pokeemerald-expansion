@@ -249,12 +249,12 @@ Debug_EventScript_Script_9_Disable:
 	end
 
 Debug_EventScript_Script_9_Text_Enabled:
-	.string "DexNav enabled.\p"
-	.string "It's in the START menu, and hidden\n"
-	.string "POKéMON detection is on.$"
+	.string "{PLAYER} received the DexNav!\p"
+	.string "It's in the START menu now.$"
 
 Debug_EventScript_Script_9_Text_Disabled:
-	.string "DexNav disabled.$"
+	.string "{PLAYER} no longer has the DexNav.\p"
+	.string "It's gone from the START menu.$"
 
 Debug_CheckSaveBlock::
 	callnative CheckSaveBlock1Size
