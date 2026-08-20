@@ -301,8 +301,6 @@ static void DebugAction_Party_ClearPokerus(u8 taskId);
 static void DebugAction_Party_ClearParty(u8 taskId);
 static void DebugAction_Party_SetParty(u8 taskId);
 static void DebugAction_Party_BattleSingle(u8 taskId);
-static void DebugAction_Party_ChangeGender(u8 taskId);
-static void DebugAction_Party_ToggleShiny(u8 taskId);
 
 static void DebugAction_Trainers_ChooseFromMap(u8 taskId);
 static void DebugAction_Trainers_ChooseTrainer(u8 taskId, void *selection);
@@ -386,6 +384,8 @@ extern const u8 Debug_EventScript_InflictStatus1[];
 extern const u8 Debug_EventScript_KoPokemon[];
 extern const u8 Debug_EventScript_SetHiddenNature[];
 extern const u8 Debug_EventScript_SetAbility[];
+extern const u8 Debug_EventScript_ChangeGender[];
+extern const u8 Debug_EventScript_ToggleShiny[];
 extern const u8 Debug_EventScript_SetFriendship[];
 extern const u8 Debug_EventScript_Script_1[];
 extern const u8 Debug_EventScript_Script_2[];
@@ -625,8 +625,8 @@ static const struct DebugMenuOption sDebugMenu_Actions_EditPokemon[] =
     { COMPOUND_STRING("Set Hidden Nature"),  DebugAction_ExecuteScript, Debug_EventScript_SetHiddenNature },
     { COMPOUND_STRING("Set Friendship"),     DebugAction_ExecuteScript, Debug_EventScript_SetFriendship },
     { COMPOUND_STRING("Set Ability"),        DebugAction_ExecuteScript, Debug_EventScript_SetAbility },
-    { COMPOUND_STRING("Change Gender"),      DebugAction_Party_ChangeGender }, // <-- Aggiunto qui
-    { COMPOUND_STRING("Toggle Shiny"),       DebugAction_Party_ToggleShiny },  // <-- Aggiunto qui
+    { COMPOUND_STRING("Change Gender"),      DebugAction_ExecuteScript, Debug_EventScript_ChangeGender },
+    { COMPOUND_STRING("Toggle Shiny"),       DebugAction_ExecuteScript, Debug_EventScript_ToggleShiny },
     { NULL }
 };
 
@@ -4723,56 +4723,71 @@ static void DebugAction_BerryFunctions_Weeds(u8 taskId)
 // *******************************
 // Actions Party/Boxes
 
-static void DebugAction_Party_ChangeGender(u8 taskId)
+void DebugNative_Party_ChangeGender(void)
 {
-    // Ottiene l'indice del Pokemon selezionato nel menu di debug
-    u8 partyIndex = gTasks[taskId].data[0];
-    struct Pokemon *mon = &gParties[B_TRAINER_PLAYER][partyIndex];
+    gSpecialVar_Result = FALSE;
 
-    if (GetMonData(mon, MON_DATA_SPECIES) != SPECIES_NONE && !GetMonData(mon, MON_DATA_IS_EGG))
-    {
-        u8 currentGender = GetMonGender(mon);
+    if (gSpecialVar_0x8004 >= PARTY_SIZE)
+        return;
 
-        if (currentGender == MON_MALE || currentGender == MON_FEMALE)
-        {
-            u32 personality = GetMonData(mon, MON_DATA_PERSONALITY);
-            bool8 isShiny = IsMonShiny(mon);
+    struct Pokemon *mon = &gParties[B_TRAINER_PLAYER][gSpecialVar_0x8004];
+    enum Species species = GetMonData(mon, MON_DATA_SPECIES);
 
-            do {
-                personality++;
-                SetMonData(mon, MON_DATA_PERSONALITY, &personality);
-            } while (GetMonGender(mon) == currentGender || IsMonShiny(mon) != isShiny);
+    if (species == SPECIES_NONE || GetMonData(mon, MON_DATA_IS_EGG))
+        return;
 
-            CalculateMonStats(mon);
-        }
-    }
+    GetMonData(mon, MON_DATA_NICKNAME, gStringVar1);
+    StringGet_Nickname(gStringVar1);
 
-    // Chiude il menu di debug in modo sicuro senza bloccare il gioco
-    Debug_DestroyMenu(taskId);
+    u32 genderRatio = gSpeciesInfo[species].genderRatio;
+
+    // Species locked to a single gender can't be flipped.
+    if (genderRatio == MON_MALE || genderRatio == MON_FEMALE || genderRatio == MON_GENDERLESS)
+        return;
+
+    // The gender comes from the lowest byte of the personality: below the
+    // gender ratio is female, at or above it is male. Pick a fitting byte
+    // directly instead of searching for one.
+    u32 personality = GetMonData(mon, MON_DATA_PERSONALITY) & ~0xFF;
+    if (GetMonGender(mon) != MON_MALE)
+        personality |= genderRatio;
+
+    // Moves the encrypted substructs over and keeps shininess, hidden nature
+    // and Tera type, which are all derived from the personality.
+    UpdateMonPersonality(&mon->box, personality);
+    CalculateMonStats(mon);
+
+    if (GetMonGender(mon) == MON_FEMALE)
+        StringCopy(gStringVar2, COMPOUND_STRING("female"));
+    else
+        StringCopy(gStringVar2, COMPOUND_STRING("male"));
+    gSpecialVar_Result = TRUE;
 }
 
-static void DebugAction_Party_ToggleShiny(u8 taskId)
+void DebugNative_Party_ToggleShiny(void)
 {
-    u8 partyIndex = gTasks[taskId].data[0];
-    struct Pokemon *mon = &gParties[B_TRAINER_PLAYER][partyIndex];
+    gSpecialVar_Result = FALSE;
 
-    if (GetMonData(mon, MON_DATA_SPECIES) != SPECIES_NONE && !GetMonData(mon, MON_DATA_IS_EGG))
-    {
-        u32 personality = GetMonData(mon, MON_DATA_PERSONALITY);
-        u8 currentGender = GetMonGender(mon);
-        bool8 currentlyShiny = IsMonShiny(mon);
+    if (gSpecialVar_0x8004 >= PARTY_SIZE)
+        return;
 
-        do {
-            personality++;
-            SetMonData(mon, MON_DATA_PERSONALITY, &personality);
-        } while (IsMonShiny(mon) == currentlyShiny || GetMonGender(mon) != currentGender);
+    struct Pokemon *mon = &gParties[B_TRAINER_PLAYER][gSpecialVar_0x8004];
 
-        CalculateMonStats(mon);
-    }
+    if (GetMonData(mon, MON_DATA_SPECIES) == SPECIES_NONE)
+        return;
 
-    Debug_DestroyMenu(taskId);
+    GetMonData(mon, MON_DATA_NICKNAME, gStringVar1);
+    StringGet_Nickname(gStringVar1);
+
+    bool32 isShiny = !IsMonShiny(mon);
+    SetMonData(mon, MON_DATA_IS_SHINY, &isShiny);
+
+    if (isShiny)
+        StringCopy(gStringVar2, COMPOUND_STRING("shiny"));
+    else
+        StringCopy(gStringVar2, COMPOUND_STRING("not shiny"));
+    gSpecialVar_Result = TRUE;
 }
-
 
 static void DebugAction_Party_HealParty(u8 taskId)
 {

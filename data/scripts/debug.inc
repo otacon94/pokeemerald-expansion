@@ -482,6 +482,50 @@ Debug_EventScript_SetAbilityClose:
 	releaseall
 	end
 
+Debug_EventScript_ChangeGender::
+	lockall
+	getpartysize
+	goto_if_eq VAR_RESULT, 0, Debug_NoPokemon
+	special ChoosePartyMon
+	goto_if_ge VAR_0x8004, PARTY_SIZE, Debug_EventScript_ChangeGender_End
+	specialvar VAR_RESULT, ScriptGetPartyMonSpecies
+	goto_if_eq VAR_RESULT, SPECIES_EGG, Debug_EventScript_ChangeGender_End
+	callnative DebugNative_Party_ChangeGender
+	goto_if_eq VAR_RESULT, FALSE, Debug_EventScript_ChangeGender_Fixed
+	msgbox Debug_EventScript_Text_GenderChanged, MSGBOX_DEFAULT
+Debug_EventScript_ChangeGender_End::
+	releaseall
+	end
+
+Debug_EventScript_ChangeGender_Fixed:
+	msgbox Debug_EventScript_Text_GenderFixed, MSGBOX_DEFAULT
+	releaseall
+	end
+
+Debug_EventScript_Text_GenderChanged:
+	.string "{STR_VAR_1} is now {STR_VAR_2}.$"
+
+Debug_EventScript_Text_GenderFixed:
+	.string "{STR_VAR_1}'s gender can't be changed.$"
+
+Debug_EventScript_ToggleShiny::
+	lockall
+	getpartysize
+	goto_if_eq VAR_RESULT, 0, Debug_NoPokemon
+	special ChoosePartyMon
+	goto_if_ge VAR_0x8004, PARTY_SIZE, Debug_EventScript_ToggleShiny_End
+	specialvar VAR_RESULT, ScriptGetPartyMonSpecies
+	goto_if_eq VAR_RESULT, SPECIES_EGG, Debug_EventScript_ToggleShiny_End
+	callnative DebugNative_Party_ToggleShiny
+	goto_if_eq VAR_RESULT, FALSE, Debug_EventScript_ToggleShiny_End
+	msgbox Debug_EventScript_Text_ShinyToggled, MSGBOX_DEFAULT
+Debug_EventScript_ToggleShiny_End::
+	releaseall
+	end
+
+Debug_EventScript_Text_ShinyToggled:
+	.string "{STR_VAR_1} is now {STR_VAR_2}.$"
+
 Debug_EventScript_SetFriendship::
 	special ChoosePartyMon
 	callnative DebugNative_Party_SetFriendship
