@@ -301,6 +301,8 @@ static void DebugAction_Party_ClearPokerus(u8 taskId);
 static void DebugAction_Party_ClearParty(u8 taskId);
 static void DebugAction_Party_SetParty(u8 taskId);
 static void DebugAction_Party_BattleSingle(u8 taskId);
+static void DebugAction_Party_ChangeGender(u8 taskId);
+static void DebugAction_Party_ToggleShiny(u8 taskId);
 
 static void DebugAction_Trainers_ChooseFromMap(u8 taskId);
 static void DebugAction_Trainers_ChooseTrainer(u8 taskId, void *selection);
@@ -623,6 +625,8 @@ static const struct DebugMenuOption sDebugMenu_Actions_EditPokemon[] =
     { COMPOUND_STRING("Set Hidden Nature"),  DebugAction_ExecuteScript, Debug_EventScript_SetHiddenNature },
     { COMPOUND_STRING("Set Friendship"),     DebugAction_ExecuteScript, Debug_EventScript_SetFriendship },
     { COMPOUND_STRING("Set Ability"),        DebugAction_ExecuteScript, Debug_EventScript_SetAbility },
+    { COMPOUND_STRING("Change Gender"),      DebugAction_Party_ChangeGender }, // <-- Aggiunto qui
+    { COMPOUND_STRING("Toggle Shiny"),       DebugAction_Party_ToggleShiny },  // <-- Aggiunto qui
     { NULL }
 };
 
@@ -4718,6 +4722,57 @@ static void DebugAction_BerryFunctions_Weeds(u8 taskId)
 
 // *******************************
 // Actions Party/Boxes
+
+static void DebugAction_Party_ChangeGender(u8 taskId)
+{
+    // Ottiene l'indice del Pokemon selezionato nel menu di debug
+    u8 partyIndex = gTasks[taskId].data[0];
+    struct Pokemon *mon = &gParties[B_TRAINER_PLAYER][partyIndex];
+
+    if (GetMonData(mon, MON_DATA_SPECIES) != SPECIES_NONE && !GetMonData(mon, MON_DATA_IS_EGG))
+    {
+        u8 currentGender = GetMonGender(mon);
+
+        if (currentGender == MON_MALE || currentGender == MON_FEMALE)
+        {
+            u32 personality = GetMonData(mon, MON_DATA_PERSONALITY);
+            bool8 isShiny = IsMonShiny(mon);
+
+            do {
+                personality++;
+                SetMonData(mon, MON_DATA_PERSONALITY, &personality);
+            } while (GetMonGender(mon) == currentGender || IsMonShiny(mon) != isShiny);
+
+            CalculateMonStats(mon);
+        }
+    }
+
+    // Chiude il menu di debug in modo sicuro senza bloccare il gioco
+    Debug_DestroyMenu(taskId);
+}
+
+static void DebugAction_Party_ToggleShiny(u8 taskId)
+{
+    u8 partyIndex = gTasks[taskId].data[0];
+    struct Pokemon *mon = &gParties[B_TRAINER_PLAYER][partyIndex];
+
+    if (GetMonData(mon, MON_DATA_SPECIES) != SPECIES_NONE && !GetMonData(mon, MON_DATA_IS_EGG))
+    {
+        u32 personality = GetMonData(mon, MON_DATA_PERSONALITY);
+        u8 currentGender = GetMonGender(mon);
+        bool8 currentlyShiny = IsMonShiny(mon);
+
+        do {
+            personality++;
+            SetMonData(mon, MON_DATA_PERSONALITY, &personality);
+        } while (IsMonShiny(mon) == currentlyShiny || GetMonGender(mon) != currentGender);
+
+        CalculateMonStats(mon);
+    }
+
+    Debug_DestroyMenu(taskId);
+}
+
 
 static void DebugAction_Party_HealParty(u8 taskId)
 {

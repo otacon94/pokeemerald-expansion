@@ -52,6 +52,7 @@
 #else
 
 #define FLAG_UNUSED_0x020    0x20 // Unused Flag
+#define FLAG_SYS_DEXNAV_GET  FLAG_UNUSED_0x020
 #define FLAG_UNUSED_0x021    0x21 // Unused Flag
 #define FLAG_UNUSED_0x022    0x22 // Unused Flag
 #define FLAG_UNUSED_0x023    0x23 // Unused Flag

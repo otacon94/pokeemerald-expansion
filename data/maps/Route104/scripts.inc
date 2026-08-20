@@ -149,6 +149,11 @@ Route104_EventScript_BattleMay::
 
 Route104_EventScript_MayDefeated::
 	msgbox Route104_Text_MayPostBattle, MSGBOX_DEFAULT
+	playfanfare MUS_OBTAIN_ITEM
+	msgbox Route104_Text_ReceivedDexNav, MSGBOX_DEFAULT
+	waitfanfare
+	setflag FLAG_SYS_DEXNAV_GET
+	closemessage
 	call_if_eq VAR_0x8008, 0, Route104_EventScript_RestoreMusic
 	releaseall
 	end
@@ -1166,3 +1171,6 @@ Route104_Text_BrendanPostBattle:
 	.string "making POKéMON battle.\p"
 	.string "Like MR. BRINEY, it's important to\n"
 	.string "become friends with your POKéMON.$"
+
+Route104_Text_ReceivedDexNav:
+	.string "{PLAYER} DexNav obtained!$"
