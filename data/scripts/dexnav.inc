@@ -1,3 +1,20 @@
+@ Handed over by whichever rival the player battles at Rustboro, on either of
+@ the two maps that encounter can happen on, and only the first time.
+Common_EventScript_GiveDexNav::
+	goto_if_set FLAG_SYS_DEXNAV_GET, Common_EventScript_DexNavAlreadyGiven
+	setflag FLAG_SYS_DEXNAV_GET
+	playfanfare MUS_OBTAIN_ITEM
+	msgbox Common_Text_ReceivedDexNav, MSGBOX_DEFAULT
+	waitfanfare
+	closemessage
+Common_EventScript_DexNavAlreadyGiven:
+	return
+
+Common_Text_ReceivedDexNav:
+	.string "{PLAYER} received the DexNav!\p"
+	.string "Open the START menu to search for\n"
+	.string "POKéMON hiding nearby!$"
+
 EventScript_StartDexNavBattle::
 	lock
 	playse SE_PIN
