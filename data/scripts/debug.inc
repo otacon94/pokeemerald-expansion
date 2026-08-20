@@ -232,30 +232,6 @@ Debug_EventScript_Script_8::
 	release
 	end
 
-Debug_EventScript_Script_9::
-	lockall
-	goto_if_set FLAG_SYS_DEXNAV_GET, Debug_EventScript_Script_9_Disable
-	setflag FLAG_SYS_DEXNAV_GET
-	setflag FLAG_SYS_DEXNAV_DETECTOR
-	msgbox Debug_EventScript_Script_9_Text_Enabled, MSGBOX_DEFAULT
-	releaseall
-	end
-
-Debug_EventScript_Script_9_Disable:
-	clearflag FLAG_SYS_DEXNAV_GET
-	clearflag FLAG_SYS_DEXNAV_DETECTOR
-	msgbox Debug_EventScript_Script_9_Text_Disabled, MSGBOX_DEFAULT
-	releaseall
-	end
-
-Debug_EventScript_Script_9_Text_Enabled:
-	.string "DexNav enabled.\p"
-	.string "It's in the START menu, and hidden\n"
-	.string "POKéMON detection is on.$"
-
-Debug_EventScript_Script_9_Text_Disabled:
-	.string "DexNav disabled.$"
-
 Debug_CheckSaveBlock::
 	callnative CheckSaveBlock1Size
 	msgbox Debug_SaveBlock1Size, MSGBOX_DEFAULT

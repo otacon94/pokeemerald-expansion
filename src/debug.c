@@ -10,6 +10,7 @@
 #include "daycare.h"
 #include "debug.h"
 #include "decoration.h"
+#include "dexnav.h"
 #include "decoration_inventory.h"
 #include "event_data.h"
 #include "event_object_movement.h"
@@ -96,6 +97,7 @@ enum FlagsVarsDebugMenu
     DEBUG_FLAGVAR_MENU_ITEM_TOGGLE_POKEDEX,
     DEBUG_FLAGVAR_MENU_ITEM_TOGGLE_NATDEX,
     DEBUG_FLAGVAR_MENU_ITEM_TOGGLE_POKENAV,
+    DEBUG_FLAGVAR_MENU_ITEM_TOGGLE_DEXNAV,
     DEBUG_FLAGVAR_MENU_ITEM_TOGGLE_MATCH_CALL,
     DEBUG_FLAGVAR_MENU_ITEM_TOGGLE_RUN_SHOES,
     DEBUG_FLAGVAR_MENU_ITEM_TOGGLE_LOCATIONS,
@@ -321,6 +323,7 @@ static void DebugAction_FlagsVars_PokedexFlags_Reset(u8 taskId);
 static void DebugAction_FlagsVars_SwitchDex(u8 taskId);
 static void DebugAction_FlagsVars_SwitchNatDex(u8 taskId);
 static void DebugAction_FlagsVars_SwitchPokeNav(u8 taskId);
+static void DebugAction_FlagsVars_SwitchDexNav(u8 taskId);
 static void DebugAction_FlagsVars_SwitchMatchCall(u8 taskId);
 static void DebugAction_FlagsVars_ToggleFlyFlags(u8 taskId);
 static void DebugAction_FlagsVars_ToggleBadgeFlags(u8 taskId);
@@ -399,7 +402,6 @@ extern const u8 Debug_EventScript_Script_5[];
 extern const u8 Debug_EventScript_Script_6[];
 extern const u8 Debug_EventScript_Script_7[];
 extern const u8 Debug_EventScript_Script_8[];
-extern const u8 Debug_EventScript_Script_9[];
 extern const u8 DebugScript_DaycareMonsNotCompatible[];
 extern const u8 DebugScript_OneDaycareMons[];
 extern const u8 DebugScript_ZeroDaycareMons[];
@@ -686,7 +688,6 @@ static const struct DebugMenuOption sDebugMenu_Actions_Scripts[] =
     { COMPOUND_STRING("Script 6"), DebugAction_ExecuteScript, Debug_EventScript_Script_6 },
     { COMPOUND_STRING("Script 7"), DebugAction_ExecuteScript, Debug_EventScript_Script_7 },
     { COMPOUND_STRING("Script 8"), DebugAction_ExecuteScript, Debug_EventScript_Script_8 },
-    { COMPOUND_STRING("Script 9 (DexNav)"), DebugAction_ExecuteScript, Debug_EventScript_Script_9 },
     { NULL }
 };
 
@@ -728,6 +729,7 @@ static const struct DebugMenuOption sDebugMenu_Actions_Flags[] =
     [DEBUG_FLAGVAR_MENU_ITEM_TOGGLE_POKEDEX]       = { COMPOUND_STRING("Toggle {STR_VAR_1}Pokédex"),         DebugAction_ToggleFlag, DebugAction_FlagsVars_SwitchDex },
     [DEBUG_FLAGVAR_MENU_ITEM_TOGGLE_NATDEX]        = { COMPOUND_STRING("Toggle {STR_VAR_1}National Dex"),    DebugAction_ToggleFlag, DebugAction_FlagsVars_SwitchNatDex },
     [DEBUG_FLAGVAR_MENU_ITEM_TOGGLE_POKENAV]       = { COMPOUND_STRING("Toggle {STR_VAR_1}PokéNav"),         DebugAction_ToggleFlag, DebugAction_FlagsVars_SwitchPokeNav },
+    [DEBUG_FLAGVAR_MENU_ITEM_TOGGLE_DEXNAV]        = { COMPOUND_STRING("Toggle {STR_VAR_1}DexNav"),          DebugAction_ToggleFlag, DebugAction_FlagsVars_SwitchDexNav },
     [DEBUG_FLAGVAR_MENU_ITEM_TOGGLE_MATCH_CALL]    = { COMPOUND_STRING("Toggle {STR_VAR_1}Match Call"),      DebugAction_ToggleFlag, DebugAction_FlagsVars_SwitchMatchCall },
     [DEBUG_FLAGVAR_MENU_ITEM_TOGGLE_RUN_SHOES]     = { COMPOUND_STRING("Toggle {STR_VAR_1}Running Shoes"),   DebugAction_ToggleFlag, DebugAction_FlagsVars_RunningShoes },
     [DEBUG_FLAGVAR_MENU_ITEM_TOGGLE_LOCATIONS]     = { COMPOUND_STRING("Toggle {STR_VAR_1}Fly Flags"),       DebugAction_ToggleFlag, DebugAction_FlagsVars_ToggleFlyFlags },
@@ -1224,6 +1226,9 @@ static u32 Debug_CheckToggleFlags(u8 id)
         break;
     case DEBUG_FLAGVAR_MENU_ITEM_TOGGLE_POKENAV:
         result = FlagGet(FLAG_SYS_POKENAV_GET);
+        break;
+    case DEBUG_FLAGVAR_MENU_ITEM_TOGGLE_DEXNAV:
+        result = DEXNAV_ENABLED ? FlagGet(FLAG_SYS_DEXNAV_GET) : DEBUG_OPTION_CANT_BE_TOGGLED;
         break;
     case DEBUG_FLAGVAR_MENU_ITEM_TOGGLE_MATCH_CALL:
         result = FlagGet(FLAG_ADDED_MATCH_CALL_TO_POKENAV) && FlagGet(FLAG_HAS_MATCH_CALL);
@@ -2481,6 +2486,24 @@ static void DebugAction_FlagsVars_SwitchPokeNav(u8 taskId)
     else
         PlaySE(SE_PC_LOGIN);
     FlagToggle(FLAG_SYS_POKENAV_GET);
+}
+
+static void DebugAction_FlagsVars_SwitchDexNav(u8 taskId)
+{
+    if (!DEXNAV_ENABLED)
+        return;
+
+    if (FlagGet(FLAG_SYS_DEXNAV_GET))
+        PlaySE(SE_PC_OFF);
+    else
+        PlaySE(SE_PC_LOGIN);
+
+    // The start menu entry and hidden Pokémon detection go together.
+    FlagToggle(FLAG_SYS_DEXNAV_GET);
+    if (FlagGet(FLAG_SYS_DEXNAV_GET))
+        FlagSet(FLAG_SYS_DEXNAV_DETECTOR);
+    else
+        FlagClear(FLAG_SYS_DEXNAV_DETECTOR);
 }
 
 static void DebugAction_FlagsVars_SwitchMatchCall(u8 taskId)
