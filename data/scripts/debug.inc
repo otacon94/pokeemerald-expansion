@@ -482,6 +482,91 @@ Debug_EventScript_SetAbilityClose:
 	releaseall
 	end
 
+Debug_EventScript_SetLevel::
+	lockall
+	getpartysize
+	goto_if_eq VAR_RESULT, 0, Debug_NoPokemon
+	special ChoosePartyMon
+	goto_if_ge VAR_0x8004, PARTY_SIZE, Debug_EventScript_SetLevel_End
+	specialvar VAR_RESULT, ScriptGetPartyMonSpecies
+	goto_if_eq VAR_RESULT, SPECIES_EGG, Debug_EventScript_SetLevel_End
+	callnative DebugNative_Party_SetLevel
+Debug_EventScript_SetLevel_End::
+	releaseall
+	end
+
+Debug_EventScript_EditMoves::
+	lockall
+	getpartysize
+	goto_if_eq VAR_RESULT, 0, Debug_NoPokemon
+	special ChoosePartyMon
+	goto_if_ge VAR_0x8004, PARTY_SIZE, Debug_EventScript_EditMoves_End
+	specialvar VAR_RESULT, ScriptGetPartyMonSpecies
+	goto_if_eq VAR_RESULT, SPECIES_EGG, Debug_EventScript_EditMoves_End
+Debug_EventScript_EditMoves_ChooseSlot:
+	callnative DebugNative_Party_PushMoveSlots
+	dynmultistack 0, 0, FALSE, 4, FALSE, 0, NULL
+	goto_if_eq VAR_RESULT, MULTI_B_PRESSED, Debug_EventScript_EditMoves_End
+	copyvar VAR_0x8005, VAR_RESULT
+Debug_EventScript_EditMoves_ChooseSource:
+	dynmultipush Debug_EventScript_EditMoves_Text_LevelUp, 0
+	dynmultipush Debug_EventScript_EditMoves_Text_Teachable, 1
+	dynmultipush Debug_EventScript_EditMoves_Text_Egg, 2
+	dynmultipush Debug_EventScript_EditMoves_Text_Delete, 3
+	dynmultistack 0, 0, FALSE, 4, FALSE, 0, NULL
+	goto_if_eq VAR_RESULT, MULTI_B_PRESSED, Debug_EventScript_EditMoves_ChooseSlot
+	goto_if_eq VAR_RESULT, 3, Debug_EventScript_EditMoves_Delete
+	copyvar VAR_0x8006, VAR_RESULT
+	callnative DebugNative_Party_PushLegalMoves
+	goto_if_eq VAR_RESULT, 0, Debug_EventScript_EditMoves_NoMoves
+	dynmultistack 0, 0, FALSE, 6, FALSE, 0, NULL
+	goto_if_eq VAR_RESULT, MULTI_B_PRESSED, Debug_EventScript_EditMoves_ChooseSource
+	callnative DebugNative_Party_SetMove
+	msgbox Debug_EventScript_EditMoves_Text_Learned, MSGBOX_DEFAULT
+	goto Debug_EventScript_EditMoves_ChooseSlot
+
+Debug_EventScript_EditMoves_Delete:
+	callnative DebugNative_Party_DeleteMove
+	goto_if_eq VAR_RESULT, FALSE, Debug_EventScript_EditMoves_CantDelete
+	msgbox Debug_EventScript_EditMoves_Text_Deleted, MSGBOX_DEFAULT
+	goto Debug_EventScript_EditMoves_ChooseSlot
+
+Debug_EventScript_EditMoves_CantDelete:
+	msgbox Debug_EventScript_EditMoves_Text_CantDelete, MSGBOX_DEFAULT
+	goto Debug_EventScript_EditMoves_ChooseSlot
+
+Debug_EventScript_EditMoves_NoMoves:
+	msgbox Debug_EventScript_EditMoves_Text_NoMoves, MSGBOX_DEFAULT
+	goto Debug_EventScript_EditMoves_ChooseSource
+
+Debug_EventScript_EditMoves_End::
+	releaseall
+	end
+
+Debug_EventScript_EditMoves_Text_LevelUp:
+	.string "Level-Up Moves$"
+
+Debug_EventScript_EditMoves_Text_Teachable:
+	.string "TM / Tutor Moves$"
+
+Debug_EventScript_EditMoves_Text_Egg:
+	.string "Egg Moves$"
+
+Debug_EventScript_EditMoves_Text_Delete:
+	.string "Delete Move$"
+
+Debug_EventScript_EditMoves_Text_Learned:
+	.string "{STR_VAR_1} learned {STR_VAR_2}!$"
+
+Debug_EventScript_EditMoves_Text_Deleted:
+	.string "{STR_VAR_1} forgot {STR_VAR_2}.$"
+
+Debug_EventScript_EditMoves_Text_CantDelete:
+	.string "That slot can't be cleared.$"
+
+Debug_EventScript_EditMoves_Text_NoMoves:
+	.string "No moves in that category.$"
+
 Debug_EventScript_ChangeGender::
 	lockall
 	getpartysize

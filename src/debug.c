@@ -44,6 +44,7 @@
 #include "region_map.h"
 #include "rtc.h"
 #include "script.h"
+#include "script_menu.h"
 #include "script_pokemon_util.h"
 #include "sound.h"
 #include "strings.h"
@@ -384,6 +385,8 @@ extern const u8 Debug_EventScript_InflictStatus1[];
 extern const u8 Debug_EventScript_KoPokemon[];
 extern const u8 Debug_EventScript_SetHiddenNature[];
 extern const u8 Debug_EventScript_SetAbility[];
+extern const u8 Debug_EventScript_SetLevel[];
+extern const u8 Debug_EventScript_EditMoves[];
 extern const u8 Debug_EventScript_ChangeGender[];
 extern const u8 Debug_EventScript_ToggleShiny[];
 extern const u8 Debug_EventScript_SetFriendship[];
@@ -620,6 +623,8 @@ static const struct DebugMenuOption sDebugMenu_Actions_PCBag[] =
 
 static const struct DebugMenuOption sDebugMenu_Actions_EditPokemon[] =
 {
+    { COMPOUND_STRING("Set Level"),          DebugAction_ExecuteScript, Debug_EventScript_SetLevel },
+    { COMPOUND_STRING("Edit Moves"),         DebugAction_ExecuteScript, Debug_EventScript_EditMoves },
     { COMPOUND_STRING("Inflict Status1"),    DebugAction_ExecuteScript, Debug_EventScript_InflictStatus1 },
     { COMPOUND_STRING("Faint Pokemon"),      DebugAction_ExecuteScript, Debug_EventScript_KoPokemon },
     { COMPOUND_STRING("Set Hidden Nature"),  DebugAction_ExecuteScript, Debug_EventScript_SetHiddenNature },
@@ -4851,7 +4856,6 @@ static void DebugNativeStep_Party_SetFriendshipMain(u8 taskId)
     gTasks[taskId].tFriendship = friendship;
     gTasks[taskId].tInput = friendship;
     gTasks[taskId].tDigit = 0;
-    gTasks[taskId].tPartyId = 0;
 }
 
 void DebugNative_Party_SetFriendship(void)
@@ -4864,6 +4868,73 @@ void DebugNative_Party_SetFriendship(void)
 }
 
 #undef tFriendship
+
+#define tLevel             data[6]
+
+static void Debug_Display_LevelInfo(s32 oldLevel, s32 newLevel, u32 digit, u8 windowId)
+{
+    ConvertIntToDecimalStringN(gStringVar1, oldLevel, STR_CONV_MODE_LEADING_ZEROS, 3);
+    ConvertIntToDecimalStringN(gStringVar2, newLevel, STR_CONV_MODE_LEADING_ZEROS, 3);
+    StringCopy(gStringVar3, gText_DigitIndicator[digit]);
+    StringExpandPlaceholders(gStringVar4, COMPOUND_STRING("Level:\n{STR_VAR_1} {RIGHT_ARROW} {STR_VAR_2}\n\n{STR_VAR_3}"));
+    AddTextPrinterParameterized(windowId, DEBUG_MENU_FONT, gStringVar4, 0, 0, 0, NULL);
+}
+
+static void Debug_Party_ApplyLevel(struct Pokemon *mon, u32 level)
+{
+    enum Species species = GetMonData(mon, MON_DATA_SPECIES);
+    u32 exp = gExperienceTables[gSpeciesInfo[species].growthRate][level];
+
+    // The level is derived from the experience, so only the latter is set here.
+    SetMonData(mon, MON_DATA_EXP, &exp);
+    CalculateMonStats(mon);
+}
+
+static void DebugNativeStep_Party_SetLevelSelect(u8 taskId)
+{
+    if (JOY_NEW(A_BUTTON))
+    {
+        PlaySE(SE_SELECT);
+        gTasks[taskId].tLevel = gTasks[taskId].tInput;
+        Debug_Party_ApplyLevel(&gParties[B_TRAINER_PLAYER][gTasks[taskId].tPartyId], gTasks[taskId].tInput);
+    }
+    else if (JOY_NEW(B_BUTTON))
+    {
+        PlaySE(SE_SELECT);
+        DebugNativeStep_CloseDebugWindow(taskId);
+        return;
+    }
+
+    Debug_HandleInput_Numeric(taskId, 1, MAX_LEVEL, 3);
+
+    if (JOY_NEW(DPAD_ANY) || JOY_NEW(A_BUTTON))
+        Debug_Display_LevelInfo(gTasks[taskId].tLevel, gTasks[taskId].tInput, gTasks[taskId].tDigit, gTasks[taskId].tSubWindowId);
+}
+
+static void DebugNativeStep_Party_SetLevelMain(u8 taskId)
+{
+    u8 windowId = DebugNativeStep_CreateDebugWindow();
+    u32 level = GetMonData(&gParties[B_TRAINER_PLAYER][gTasks[taskId].tPartyId], MON_DATA_LEVEL);
+
+    Debug_Display_LevelInfo(level, level, 0, windowId);
+
+    gTasks[taskId].func = DebugNativeStep_Party_SetLevelSelect;
+    gTasks[taskId].tSubWindowId = windowId;
+    gTasks[taskId].tLevel = level;
+    gTasks[taskId].tInput = level;
+    gTasks[taskId].tDigit = 0;
+}
+
+void DebugNative_Party_SetLevel(void)
+{
+    if (gSpecialVar_0x8004 < PARTY_SIZE)
+    {
+        u32 taskId = CreateTask(DebugNativeStep_Party_SetLevelMain, 1);
+        gTasks[taskId].tPartyId = gSpecialVar_0x8004;
+    }
+}
+
+#undef tLevel
 
 #define tStrain            data[6]
 
@@ -4950,7 +5021,6 @@ static void DebugNativeStep_Party_SetPokerusMain(u8 taskId)
     gTasks[taskId].tStrain = strain;
     gTasks[taskId].tInput = strain;
     gTasks[taskId].tDigit = 0;
-    gTasks[taskId].tPartyId = 0;
 }
 
 void DebugNative_Party_SetPokerus(void)
@@ -4970,6 +5040,170 @@ void DebugNative_Party_SetPokerus(void)
 #undef tSubWindowId
 #undef tInput
 #undef tDigit
+
+// Moves offered by the move editor, matching the order of the menu shown by
+// Debug_EventScript_EditMoves.
+enum DebugMoveSource
+{
+    DEBUG_MOVE_SOURCE_LEVEL_UP,
+    DEBUG_MOVE_SOURCE_TEACHABLE,
+    DEBUG_MOVE_SOURCE_EGG,
+};
+
+// Multichoice ids are compared against MULTI_B_PRESSED, so move ids are pushed
+// with an offset that keeps them clear of it.
+#define DEBUG_MOVE_ID_OFFSET   1000
+// A multichoice can hold at most 255 entries.
+#define DEBUG_MOVE_LIST_MAX    250
+#define DEBUG_MOVE_ENTRY_SIZE  (MOVE_NAME_LENGTH + 10)
+
+static void Debug_PushMultichoiceEntry(const u8 *text, u32 id)
+{
+    struct ListMenuItem item;
+    u8 *name = Alloc(DEBUG_MOVE_ENTRY_SIZE);
+
+    if (name == NULL)
+        return;
+
+    StringCopy(name, text);
+    item.name = name;
+    item.id = id;
+    MultichoiceDynamic_PushElement(item);
+}
+
+void DebugNative_Party_PushMoveSlots(void)
+{
+    struct Pokemon *mon = &gParties[B_TRAINER_PLAYER][gSpecialVar_0x8004];
+
+    for (u32 i = 0; i < MAX_MON_MOVES; i++)
+    {
+        enum Move move = GetMonData(mon, MON_DATA_MOVE1 + i);
+        u8 text[DEBUG_MOVE_ENTRY_SIZE];
+
+        ConvertIntToDecimalStringN(text, i + 1, STR_CONV_MODE_LEFT_ALIGN, 1);
+        StringAppend(text, COMPOUND_STRING(". "));
+        if (move == MOVE_NONE)
+            StringAppend(text, COMPOUND_STRING("---"));
+        else
+            StringAppend(text, GetMoveName(move));
+
+        Debug_PushMultichoiceEntry(text, i);
+    }
+}
+
+void DebugNative_Party_PushLegalMoves(void)
+{
+    struct Pokemon *mon = &gParties[B_TRAINER_PLAYER][gSpecialVar_0x8004];
+    enum Species species = GetMonData(mon, MON_DATA_SPECIES);
+    const struct LevelUpMove *levelUpLearnset = NULL;
+    const u16 *learnset = NULL;
+    u32 count = 0;
+
+    switch (gSpecialVar_0x8006)
+    {
+    case DEBUG_MOVE_SOURCE_LEVEL_UP:
+        levelUpLearnset = GetSpeciesLevelUpLearnset(species);
+        while (count < DEBUG_MOVE_LIST_MAX && levelUpLearnset[count].move != LEVEL_UP_MOVE_END)
+            count++;
+        break;
+    case DEBUG_MOVE_SOURCE_TEACHABLE:
+        learnset = GetSpeciesTeachableLearnset(species);
+        break;
+    case DEBUG_MOVE_SOURCE_EGG:
+    {
+        // Egg moves are only listed on the first stage of the family.
+        enum Species baseSpecies = species;
+
+        while (GetSpeciesPreEvolution(baseSpecies) != SPECIES_NONE)
+            baseSpecies = GetSpeciesPreEvolution(baseSpecies);
+
+        learnset = GetSpeciesEggMoves(baseSpecies);
+        break;
+    }
+    }
+
+    if (learnset != NULL)
+    {
+        while (count < DEBUG_MOVE_LIST_MAX && learnset[count] != MOVE_UNAVAILABLE)
+            count++;
+    }
+
+    gSpecialVar_Result = count;
+    if (count == 0)
+        return;
+
+    // Sized up front, otherwise the stack is reallocated every few entries.
+    MultichoiceDynamic_InitStack(count);
+
+    for (u32 i = 0; i < count; i++)
+    {
+        if (levelUpLearnset != NULL)
+        {
+            u8 text[DEBUG_MOVE_ENTRY_SIZE];
+            u8 level[4];
+
+            ConvertIntToDecimalStringN(level, levelUpLearnset[i].level, STR_CONV_MODE_LEFT_ALIGN, 3);
+            StringCopy(text, COMPOUND_STRING("Lv."));
+            StringAppend(text, level);
+            StringAppend(text, COMPOUND_STRING(" "));
+            StringAppend(text, GetMoveName(levelUpLearnset[i].move));
+
+            Debug_PushMultichoiceEntry(text, levelUpLearnset[i].move + DEBUG_MOVE_ID_OFFSET);
+        }
+        else
+        {
+            Debug_PushMultichoiceEntry(GetMoveName(learnset[i]), learnset[i] + DEBUG_MOVE_ID_OFFSET);
+        }
+    }
+}
+
+void DebugNative_Party_SetMove(void)
+{
+    if (gSpecialVar_0x8004 >= PARTY_SIZE || gSpecialVar_0x8005 >= MAX_MON_MOVES
+     || gSpecialVar_Result < DEBUG_MOVE_ID_OFFSET)
+        return;
+
+    struct Pokemon *mon = &gParties[B_TRAINER_PLAYER][gSpecialVar_0x8004];
+    enum Move move = gSpecialVar_Result - DEBUG_MOVE_ID_OFFSET;
+
+    SetMonMoveSlot(mon, move, gSpecialVar_0x8005);
+
+    GetMonData(mon, MON_DATA_NICKNAME, gStringVar1);
+    StringGet_Nickname(gStringVar1);
+    StringCopy(gStringVar2, GetMoveName(move));
+}
+
+void DebugNative_Party_DeleteMove(void)
+{
+    gSpecialVar_Result = FALSE;
+
+    if (gSpecialVar_0x8004 >= PARTY_SIZE || gSpecialVar_0x8005 >= MAX_MON_MOVES)
+        return;
+
+    struct Pokemon *mon = &gParties[B_TRAINER_PLAYER][gSpecialVar_0x8004];
+    enum Move move = GetMonData(mon, MON_DATA_MOVE1 + gSpecialVar_0x8005);
+    u32 knownMoves = 0;
+
+    if (move == MOVE_NONE)
+        return;
+
+    for (u32 i = 0; i < MAX_MON_MOVES; i++)
+    {
+        if (GetMonData(mon, MON_DATA_MOVE1 + i) != MOVE_NONE)
+            knownMoves++;
+    }
+
+    // A Pokémon with no moves at all would break the battle engine.
+    if (knownMoves <= 1)
+        return;
+
+    GetMonData(mon, MON_DATA_NICKNAME, gStringVar1);
+    StringGet_Nickname(gStringVar1);
+    StringCopy(gStringVar2, GetMoveName(move));
+
+    DeleteMove(mon, move);
+    gSpecialVar_Result = TRUE;
+}
 
 static void DebugAction_Party_ClearPokerus(u8 taskId)
 {
