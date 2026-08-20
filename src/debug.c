@@ -387,6 +387,7 @@ extern const u8 Debug_EventScript_SetHiddenNature[];
 extern const u8 Debug_EventScript_SetAbility[];
 extern const u8 Debug_EventScript_SetLevel[];
 extern const u8 Debug_EventScript_EditMoves[];
+extern const u8 Debug_EventScript_ReleaseMon[];
 extern const u8 Debug_EventScript_ChangeGender[];
 extern const u8 Debug_EventScript_ToggleShiny[];
 extern const u8 Debug_EventScript_SetFriendship[];
@@ -646,6 +647,7 @@ static const struct DebugMenuOption sDebugMenu_Actions_Party[] =
     { COMPOUND_STRING("Give Pokerus"),       DebugAction_ExecuteScript, Debug_EventScript_GivePokerus },
     { COMPOUND_STRING("Clear Pokerus"),      DebugAction_Party_ClearPokerus},
     { COMPOUND_STRING("Clear Party"),        DebugAction_Party_ClearParty },
+    { COMPOUND_STRING("Release Pokemon"),    DebugAction_ExecuteScript, Debug_EventScript_ReleaseMon },
     { COMPOUND_STRING("Set Party"),          DebugAction_Party_SetParty },
     { COMPOUND_STRING("Start Debug Battle"), DebugAction_Party_BattleSingle },
     { NULL }
@@ -5055,12 +5057,12 @@ enum DebugMoveSource
 #define DEBUG_MOVE_ID_OFFSET   1000
 // A multichoice can hold at most 255 entries.
 #define DEBUG_MOVE_LIST_MAX    250
-#define DEBUG_MOVE_ENTRY_SIZE  (MOVE_NAME_LENGTH + 10)
+#define DEBUG_MULTICHOICE_ENTRY_SIZE  (MOVE_NAME_LENGTH + 10)
 
 static void Debug_PushMultichoiceEntry(const u8 *text, u32 id)
 {
     struct ListMenuItem item;
-    u8 *name = Alloc(DEBUG_MOVE_ENTRY_SIZE);
+    u8 *name = Alloc(DEBUG_MULTICHOICE_ENTRY_SIZE);
 
     if (name == NULL)
         return;
@@ -5078,7 +5080,7 @@ void DebugNative_Party_PushMoveSlots(void)
     for (u32 i = 0; i < MAX_MON_MOVES; i++)
     {
         enum Move move = GetMonData(mon, MON_DATA_MOVE1 + i);
-        u8 text[DEBUG_MOVE_ENTRY_SIZE];
+        u8 text[DEBUG_MULTICHOICE_ENTRY_SIZE];
 
         ConvertIntToDecimalStringN(text, i + 1, STR_CONV_MODE_LEFT_ALIGN, 1);
         StringAppend(text, COMPOUND_STRING(". "));
@@ -5139,7 +5141,7 @@ void DebugNative_Party_PushLegalMoves(void)
     {
         if (levelUpLearnset != NULL)
         {
-            u8 text[DEBUG_MOVE_ENTRY_SIZE];
+            u8 text[DEBUG_MULTICHOICE_ENTRY_SIZE];
             u8 level[4];
 
             ConvertIntToDecimalStringN(level, levelUpLearnset[i].level, STR_CONV_MODE_LEFT_ALIGN, 3);
@@ -5203,6 +5205,131 @@ void DebugNative_Party_DeleteMove(void)
 
     DeleteMove(mon, move);
     gSpecialVar_Result = TRUE;
+}
+
+// *******************************
+// Releasing a single Pokémon, from the party or from a storage box
+
+void DebugNative_Party_PrepareRelease(void)
+{
+    gSpecialVar_Result = FALSE;
+
+    if (gSpecialVar_0x8004 >= PARTY_SIZE)
+        return;
+
+    struct Pokemon *mon = &gParties[B_TRAINER_PLAYER][gSpecialVar_0x8004];
+    u32 partyCount = 0;
+
+    if (GetMonData(mon, MON_DATA_SPECIES) == SPECIES_NONE)
+        return;
+
+    GetMonData(mon, MON_DATA_NICKNAME, gStringVar1);
+    StringGet_Nickname(gStringVar1);
+
+    for (u32 i = 0; i < PARTY_SIZE; i++)
+    {
+        if (GetMonData(&gParties[B_TRAINER_PLAYER][i], MON_DATA_SPECIES) != SPECIES_NONE)
+            partyCount++;
+    }
+
+    // Leaving the player with an empty party soft-locks battles; "Clear Party"
+    // is the deliberate way to wipe everything.
+    if (partyCount <= 1)
+        return;
+
+    gSpecialVar_Result = TRUE;
+}
+
+void DebugNative_Party_ReleaseMon(void)
+{
+    if (gSpecialVar_0x8004 >= PARTY_SIZE)
+        return;
+
+    ZeroMonData(&gParties[B_TRAINER_PLAYER][gSpecialVar_0x8004]);
+    CompactPartySlots();
+    CalculatePlayerPartyCount();
+}
+
+void DebugNative_Storage_PushBoxes(void)
+{
+    MultichoiceDynamic_InitStack(TOTAL_BOXES_COUNT);
+
+    for (u32 i = 0; i < TOTAL_BOXES_COUNT; i++)
+    {
+        u8 text[DEBUG_MULTICHOICE_ENTRY_SIZE];
+        u8 count[4];
+
+        StringCopy(text, GetBoxNamePtr(i));
+        StringAppend(text, COMPOUND_STRING(" ("));
+        ConvertIntToDecimalStringN(count, CountMonsInBox(i), STR_CONV_MODE_LEFT_ALIGN, 2);
+        StringAppend(text, count);
+        StringAppend(text, COMPOUND_STRING(")"));
+
+        Debug_PushMultichoiceEntry(text, i);
+    }
+}
+
+void DebugNative_Storage_PushBoxMons(void)
+{
+    u32 boxId = gSpecialVar_0x8005;
+
+    gSpecialVar_Result = 0;
+    if (boxId >= TOTAL_BOXES_COUNT)
+        return;
+
+    gSpecialVar_Result = CountMonsInBox(boxId);
+    if (gSpecialVar_Result == 0)
+        return;
+
+    MultichoiceDynamic_InitStack(gSpecialVar_Result);
+
+    for (u32 i = 0; i < IN_BOX_COUNT; i++)
+    {
+        u8 text[DEBUG_MULTICHOICE_ENTRY_SIZE];
+
+        if (GetBoxMonDataAt(boxId, i, MON_DATA_SPECIES) == SPECIES_NONE)
+            continue;
+
+        if (GetBoxMonDataAt(boxId, i, MON_DATA_IS_EGG))
+        {
+            StringCopy(text, COMPOUND_STRING("EGG"));
+        }
+        else
+        {
+            u8 level[4];
+
+            GetAndCopyBoxMonDataAt(boxId, i, MON_DATA_NICKNAME, text);
+            StringGet_Nickname(text);
+            StringAppend(text, COMPOUND_STRING(" Lv."));
+            ConvertIntToDecimalStringN(level, GetLevelFromBoxMonExp(GetBoxedMonPtr(boxId, i)), STR_CONV_MODE_LEFT_ALIGN, 3);
+            StringAppend(text, level);
+        }
+
+        Debug_PushMultichoiceEntry(text, i);
+    }
+}
+
+void DebugNative_Storage_BufferMonName(void)
+{
+    if (gSpecialVar_0x8005 >= TOTAL_BOXES_COUNT || gSpecialVar_0x8006 >= IN_BOX_COUNT)
+        return;
+
+    if (GetBoxMonDataAt(gSpecialVar_0x8005, gSpecialVar_0x8006, MON_DATA_IS_EGG))
+    {
+        StringCopy(gStringVar1, COMPOUND_STRING("EGG"));
+        return;
+    }
+
+    GetAndCopyBoxMonDataAt(gSpecialVar_0x8005, gSpecialVar_0x8006, MON_DATA_NICKNAME, gStringVar1);
+    StringGet_Nickname(gStringVar1);
+}
+
+void DebugNative_Storage_ReleaseMon(void)
+{
+    if (gSpecialVar_0x8005 >= TOTAL_BOXES_COUNT || gSpecialVar_0x8006 >= IN_BOX_COUNT)
+        return;
+
+    ZeroBoxMonAt(gSpecialVar_0x8005, gSpecialVar_0x8006);
 }
 
 static void DebugAction_Party_ClearPokerus(u8 taskId)

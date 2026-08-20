@@ -149,14 +149,21 @@ Route104_EventScript_BattleMay::
 
 Route104_EventScript_MayDefeated::
 	msgbox Route104_Text_MayPostBattle, MSGBOX_DEFAULT
-	playfanfare MUS_OBTAIN_ITEM
-	msgbox Route104_Text_ReceivedDexNav, MSGBOX_DEFAULT
-	waitfanfare
-	setflag FLAG_SYS_DEXNAV_GET
-	closemessage
+	call Route104_EventScript_GiveDexNav
 	call_if_eq VAR_0x8008, 0, Route104_EventScript_RestoreMusic
 	releaseall
 	end
+
+@ Handed over by whichever rival the player battles here, and only the first time.
+Route104_EventScript_GiveDexNav::
+	goto_if_set FLAG_SYS_DEXNAV_GET, Route104_EventScript_DexNavAlreadyGiven
+	setflag FLAG_SYS_DEXNAV_GET
+	playfanfare MUS_OBTAIN_ITEM
+	msgbox Route104_Text_ReceivedDexNav, MSGBOX_DEFAULT
+	waitfanfare
+	closemessage
+Route104_EventScript_DexNavAlreadyGiven:
+	return
 
 Route104_EventScript_RestoreMusic::
 	savebgm MUS_DUMMY
@@ -226,6 +233,7 @@ Route104_EventScript_BattleBrendan::
 
 Route104_EventScript_BrendanDefeated::
 	msgbox Route104_Text_BrendanPostBattle, MSGBOX_DEFAULT
+	call Route104_EventScript_GiveDexNav
 	call_if_eq VAR_0x8008, 0, Route104_EventScript_RestoreMusic
 	releaseall
 	end
@@ -1173,4 +1181,6 @@ Route104_Text_BrendanPostBattle:
 	.string "become friends with your POKéMON.$"
 
 Route104_Text_ReceivedDexNav:
-	.string "{PLAYER} DexNav obtained!$"
+	.string "{PLAYER} received the DexNav!\p"
+	.string "Open the START menu to search for\n"
+	.string "POKéMON hiding nearby!$"

@@ -15,6 +15,12 @@ void DebugNative_Party_PushMoveSlots(void);
 void DebugNative_Party_PushLegalMoves(void);
 void DebugNative_Party_SetMove(void);
 void DebugNative_Party_DeleteMove(void);
+void DebugNative_Party_PrepareRelease(void);
+void DebugNative_Party_ReleaseMon(void);
+void DebugNative_Storage_PushBoxes(void);
+void DebugNative_Storage_PushBoxMons(void);
+void DebugNative_Storage_BufferMonName(void);
+void DebugNative_Storage_ReleaseMon(void);
 
 extern EWRAM_DATA bool8 gIsDebugBattle;
 extern EWRAM_DATA u64 gDebugAIFlags;

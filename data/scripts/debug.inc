@@ -482,6 +482,74 @@ Debug_EventScript_SetAbilityClose:
 	releaseall
 	end
 
+Debug_EventScript_ReleaseMon::
+	lockall
+	dynmultipush Debug_EventScript_Release_Text_Party, 0
+	dynmultipush Debug_EventScript_Release_Text_Box, 1
+	dynmultistack 0, 0, FALSE, 2, FALSE, 0, NULL
+	goto_if_eq VAR_RESULT, MULTI_B_PRESSED, Debug_EventScript_Release_End
+	goto_if_eq VAR_RESULT, 1, Debug_EventScript_Release_ChooseBox
+	getpartysize
+	goto_if_eq VAR_RESULT, 0, Debug_NoPokemon
+	special ChoosePartyMon
+	goto_if_ge VAR_0x8004, PARTY_SIZE, Debug_EventScript_Release_End
+	callnative DebugNative_Party_PrepareRelease
+	goto_if_eq VAR_RESULT, FALSE, Debug_EventScript_Release_LastMon
+	msgbox Debug_EventScript_Release_Text_Confirm, MSGBOX_YESNO
+	goto_if_eq VAR_RESULT, NO, Debug_EventScript_Release_End
+	callnative DebugNative_Party_ReleaseMon
+	msgbox Debug_EventScript_Release_Text_Released, MSGBOX_DEFAULT
+	goto Debug_EventScript_Release_End
+
+Debug_EventScript_Release_ChooseBox:
+	callnative DebugNative_Storage_PushBoxes
+	dynmultistack 0, 0, FALSE, 6, FALSE, 0, NULL
+	goto_if_eq VAR_RESULT, MULTI_B_PRESSED, Debug_EventScript_Release_End
+	copyvar VAR_0x8005, VAR_RESULT
+	callnative DebugNative_Storage_PushBoxMons
+	goto_if_eq VAR_RESULT, 0, Debug_EventScript_Release_EmptyBox
+	dynmultistack 0, 0, FALSE, 6, FALSE, 0, NULL
+	goto_if_eq VAR_RESULT, MULTI_B_PRESSED, Debug_EventScript_Release_ChooseBox
+	copyvar VAR_0x8006, VAR_RESULT
+	callnative DebugNative_Storage_BufferMonName
+	msgbox Debug_EventScript_Release_Text_Confirm, MSGBOX_YESNO
+	goto_if_eq VAR_RESULT, NO, Debug_EventScript_Release_ChooseBox
+	callnative DebugNative_Storage_ReleaseMon
+	msgbox Debug_EventScript_Release_Text_Released, MSGBOX_DEFAULT
+	goto Debug_EventScript_Release_ChooseBox
+
+Debug_EventScript_Release_EmptyBox:
+	msgbox Debug_EventScript_Release_Text_EmptyBox, MSGBOX_DEFAULT
+	goto Debug_EventScript_Release_ChooseBox
+
+Debug_EventScript_Release_LastMon:
+	msgbox Debug_EventScript_Release_Text_LastMon, MSGBOX_DEFAULT
+	releaseall
+	end
+
+Debug_EventScript_Release_End::
+	releaseall
+	end
+
+Debug_EventScript_Release_Text_Party:
+	.string "From the Party$"
+
+Debug_EventScript_Release_Text_Box:
+	.string "From a Box$"
+
+Debug_EventScript_Release_Text_Confirm:
+	.string "Release {STR_VAR_1}?$"
+
+Debug_EventScript_Release_Text_Released:
+	.string "{STR_VAR_1} was released.$"
+
+Debug_EventScript_Release_Text_EmptyBox:
+	.string "That Box is empty.$"
+
+Debug_EventScript_Release_Text_LastMon:
+	.string "That's the last POKéMON in the party.\p"
+	.string "Use Clear Party to wipe it instead.$"
+
 Debug_EventScript_SetLevel::
 	lockall
 	getpartysize
