@@ -342,7 +342,7 @@ static enum CancelerResult CancelerVolatileBlocked(struct BattleCalcValues *cv)
         gBattlescriptCurrInstr = BattleScript_MoveUsedHealBlockPrevents;
         result = CANCELER_RESULT_FAILURE;
     }
-    else if (IsGravityPreventingMove(cv->move))
+    else if (IsGravityPreventingMove(GetActiveGimmick(cv->battlerAtk) == GIMMICK_Z_MOVE ? gBattleStruct->baseMove : cv->move))
     {
         gBattleScripting.battler = cv->battlerAtk;
         CancelMultiTurnMoves(cv->battlerAtk);
@@ -1051,7 +1051,6 @@ static enum CancelerResult CancelerPPDeduction(struct BattleCalcValues *cv)
 
             // Possibly better to just move type setting and redirection to attackcanceler as a new case at this point
             SetTypeBeforeUsingMove(cv->move, cv->battlerAtk);
-            ClearDamageCalcResults();
             gBattlescriptCurrInstr = GetMoveBattleScript(cv->move);
             return CANCELER_RESULT_RUN_SCRIPT_AND_INCREMENT;
         }
