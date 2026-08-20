@@ -149,7 +149,6 @@ Route104_EventScript_BattleMay::
 
 Route104_EventScript_MayDefeated::
 	msgbox Route104_Text_MayPostBattle, MSGBOX_DEFAULT
-	call Common_EventScript_GiveDexNav
 	call_if_eq VAR_0x8008, 0, Route104_EventScript_RestoreMusic
 	releaseall
 	end
@@ -222,7 +221,6 @@ Route104_EventScript_BattleBrendan::
 
 Route104_EventScript_BrendanDefeated::
 	msgbox Route104_Text_BrendanPostBattle, MSGBOX_DEFAULT
-	call Common_EventScript_GiveDexNav
 	call_if_eq VAR_0x8008, 0, Route104_EventScript_RestoreMusic
 	releaseall
 	end
