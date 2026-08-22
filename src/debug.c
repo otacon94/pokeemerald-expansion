@@ -384,8 +384,11 @@ extern const u8 Debug_EventScript_GivePokerus[];
 extern const u8 Debug_EventScript_InflictStatus1[];
 extern const u8 Debug_EventScript_KoPokemon[];
 extern const u8 Debug_EventScript_SetHiddenNature[];
+extern const u8 Debug_EventScript_SetNature[];
 extern const u8 Debug_EventScript_SetAbility[];
 extern const u8 Debug_EventScript_SetLevel[];
+extern const u8 Debug_EventScript_SetIVs[];
+extern const u8 Debug_EventScript_SetEVs[];
 extern const u8 Debug_EventScript_EditMoves[];
 extern const u8 Debug_EventScript_ReleaseMon[];
 extern const u8 Debug_EventScript_ChangeGender[];
@@ -629,7 +632,10 @@ static const struct DebugMenuOption sDebugMenu_Actions_EditPokemon[] =
     { COMPOUND_STRING("Edit Moves"),         DebugAction_ExecuteScript, Debug_EventScript_EditMoves },
     { COMPOUND_STRING("Inflict Status1"),    DebugAction_ExecuteScript, Debug_EventScript_InflictStatus1 },
     { COMPOUND_STRING("Faint Pokemon"),      DebugAction_ExecuteScript, Debug_EventScript_KoPokemon },
-    { COMPOUND_STRING("Set Hidden Nature"),  DebugAction_ExecuteScript, Debug_EventScript_SetHiddenNature },
+    { COMPOUND_STRING("Set Nature"),         DebugAction_ExecuteScript, Debug_EventScript_SetNature },
+    { COMPOUND_STRING("Set Nature (Mint)"),  DebugAction_ExecuteScript, Debug_EventScript_SetHiddenNature },
+    { COMPOUND_STRING("Set IVs"),            DebugAction_ExecuteScript, Debug_EventScript_SetIVs },
+    { COMPOUND_STRING("Set EVs"),            DebugAction_ExecuteScript, Debug_EventScript_SetEVs },
     { COMPOUND_STRING("Set Friendship"),     DebugAction_ExecuteScript, Debug_EventScript_SetFriendship },
     { COMPOUND_STRING("Set Ability"),        DebugAction_ExecuteScript, Debug_EventScript_SetAbility },
     { COMPOUND_STRING("Change Gender"),      DebugAction_ExecuteScript, Debug_EventScript_ChangeGender },
@@ -4773,6 +4779,44 @@ void DebugNative_Party_ChangeGender(void)
     gSpecialVar_Result = TRUE;
 }
 
+// Sets the nature the Pokémon was generated with, rather than the mint nature
+// that "Set Nature (Mint)" overrides on top of it.
+void DebugNative_Party_SetNature(void)
+{
+    gSpecialVar_Result = FALSE;
+
+    if (gSpecialVar_0x8004 >= PARTY_SIZE)
+        return;
+
+    struct Pokemon *mon = &gParties[B_TRAINER_PLAYER][gSpecialVar_0x8004];
+    enum Species species = GetMonData(mon, MON_DATA_SPECIES);
+    u32 nature = gSpecialVar_0x8005;
+
+    if (species == SPECIES_NONE || GetMonData(mon, MON_DATA_IS_EGG) || nature >= NUM_NATURES)
+        return;
+
+    GetMonData(mon, MON_DATA_NICKNAME, gStringVar1);
+    StringGet_Nickname(gStringVar1);
+    StringCopy(gStringVar2, gNaturesInfo[nature].name);
+
+    // The nature is derived from the personality, so the personality is rerolled
+    // until it yields the requested one. The gender is kept, but everything else
+    // read straight from the personality (Spinda spots, a Wurmple's evolution)
+    // changes along with it.
+    u32 newPersonality = GetMonPersonality(species, GetMonGender(mon), nature, RANDOM_UNOWN_LETTER);
+
+    // Moves the encrypted substructs over and keeps shininess, hidden nature
+    // and Tera type.
+    UpdateMonPersonality(&mon->box, newPersonality);
+
+    // The preserved hidden nature is what the stats are built from, so it would
+    // keep overriding the nature just set.
+    SetMonData(mon, MON_DATA_HIDDEN_NATURE, &nature);
+    CalculateMonStats(mon);
+
+    gSpecialVar_Result = TRUE;
+}
+
 void DebugNative_Party_ToggleShiny(void)
 {
     gSpecialVar_Result = FALSE;
@@ -5037,6 +5081,161 @@ void DebugNative_Party_SetPokerus(void)
 }
 
 #undef tStrain
+
+#define tStat              data[6]
+
+static u32 Debug_Party_SumOtherEVs(struct Pokemon *mon, u32 skippedStat)
+{
+    u32 total = 0;
+
+    for (u32 i = 0; i < NUM_STATS; i++)
+    {
+        if (i != skippedStat)
+            total += GetMonData(mon, MON_DATA_HP_EV + i);
+    }
+
+    return total;
+}
+
+// Once the other five stats are trained, the total cap leaves less room than
+// the per-stat cap does.
+static u32 Debug_Party_MaxEVForStat(struct Pokemon *mon, u32 stat)
+{
+    u32 max = MAX_TOTAL_EVS - Debug_Party_SumOtherEVs(mon, stat);
+
+    if (max > MAX_PER_STAT_EVS)
+        max = MAX_PER_STAT_EVS;
+
+    return max;
+}
+
+// The IV and EV editors both walk the six stats in order: A stores the stat on
+// screen and moves on to the next one, B leaves the editor.
+static void DebugNativeStep_Party_SetIVsSelect(u8 taskId)
+{
+    struct Pokemon *mon = &gParties[B_TRAINER_PLAYER][gTasks[taskId].tPartyId];
+
+    if (JOY_NEW(A_BUTTON))
+    {
+        u32 iv = gTasks[taskId].tInput;
+
+        PlaySE(SE_SELECT);
+        SetMonData(mon, MON_DATA_HP_IV + gTasks[taskId].tStat, &iv);
+        CalculateMonStats(mon);
+
+        if (gTasks[taskId].tStat == NUM_STATS - 1)
+        {
+            DebugNativeStep_CloseDebugWindow(taskId);
+            return;
+        }
+
+        gTasks[taskId].tStat++;
+        gTasks[taskId].tInput = GetMonData(mon, MON_DATA_HP_IV + gTasks[taskId].tStat);
+        gTasks[taskId].tDigit = 0;
+    }
+    else if (JOY_NEW(B_BUTTON))
+    {
+        PlaySE(SE_SELECT);
+        DebugNativeStep_CloseDebugWindow(taskId);
+        return;
+    }
+
+    Debug_HandleInput_Numeric(taskId, 0, MAX_PER_STAT_IVS, 2);
+
+    if (JOY_NEW(DPAD_ANY) || JOY_NEW(A_BUTTON))
+        Debug_Display_StatInfo(sDebugText_IVs, gTasks[taskId].tStat, gTasks[taskId].tInput, gTasks[taskId].tDigit, gTasks[taskId].tSubWindowId, MAX_PER_STAT_IVS);
+}
+
+static void DebugNativeStep_Party_SetIVsMain(u8 taskId)
+{
+    u8 windowId = DebugNativeStep_CreateDebugWindow();
+    u32 iv = GetMonData(&gParties[B_TRAINER_PLAYER][gTasks[taskId].tPartyId], MON_DATA_HP_IV);
+
+    Debug_Display_StatInfo(sDebugText_IVs, STAT_HP, iv, 0, windowId, MAX_PER_STAT_IVS);
+
+    gTasks[taskId].func = DebugNativeStep_Party_SetIVsSelect;
+    gTasks[taskId].tSubWindowId = windowId;
+    gTasks[taskId].tStat = STAT_HP;
+    gTasks[taskId].tInput = iv;
+    gTasks[taskId].tDigit = 0;
+}
+
+void DebugNative_Party_SetIVs(void)
+{
+    if (gSpecialVar_0x8004 < PARTY_SIZE)
+    {
+        u32 taskId = CreateTask(DebugNativeStep_Party_SetIVsMain, 1);
+        gTasks[taskId].tPartyId = gSpecialVar_0x8004;
+    }
+}
+
+static void DebugNativeStep_Party_SetEVsSelect(u8 taskId)
+{
+    struct Pokemon *mon = &gParties[B_TRAINER_PLAYER][gTasks[taskId].tPartyId];
+    u32 max = Debug_Party_MaxEVForStat(mon, gTasks[taskId].tStat);
+
+    if (JOY_NEW(A_BUTTON))
+    {
+        u32 ev = gTasks[taskId].tInput;
+
+        PlaySE(SE_SELECT);
+        SetMonData(mon, MON_DATA_HP_EV + gTasks[taskId].tStat, &ev);
+        CalculateMonStats(mon);
+
+        if (gTasks[taskId].tStat == NUM_STATS - 1)
+        {
+            DebugNativeStep_CloseDebugWindow(taskId);
+            return;
+        }
+
+        gTasks[taskId].tStat++;
+        max = Debug_Party_MaxEVForStat(mon, gTasks[taskId].tStat);
+        ev = GetMonData(mon, MON_DATA_HP_EV + gTasks[taskId].tStat);
+        gTasks[taskId].tInput = (ev > max) ? max : ev;
+        gTasks[taskId].tDigit = 0;
+    }
+    else if (JOY_NEW(B_BUTTON))
+    {
+        PlaySE(SE_SELECT);
+        DebugNativeStep_CloseDebugWindow(taskId);
+        return;
+    }
+
+    Debug_HandleInput_Numeric(taskId, 0, max, 3);
+
+    if (JOY_NEW(DPAD_ANY) || JOY_NEW(A_BUTTON))
+        Debug_Display_StatInfo(sDebugText_EVs, gTasks[taskId].tStat, gTasks[taskId].tInput, gTasks[taskId].tDigit, gTasks[taskId].tSubWindowId, MAX_PER_STAT_EVS);
+}
+
+static void DebugNativeStep_Party_SetEVsMain(u8 taskId)
+{
+    struct Pokemon *mon = &gParties[B_TRAINER_PLAYER][gTasks[taskId].tPartyId];
+    u8 windowId = DebugNativeStep_CreateDebugWindow();
+    u32 max = Debug_Party_MaxEVForStat(mon, STAT_HP);
+    u32 ev = GetMonData(mon, MON_DATA_HP_EV);
+
+    if (ev > max)
+        ev = max;
+
+    Debug_Display_StatInfo(sDebugText_EVs, STAT_HP, ev, 0, windowId, MAX_PER_STAT_EVS);
+
+    gTasks[taskId].func = DebugNativeStep_Party_SetEVsSelect;
+    gTasks[taskId].tSubWindowId = windowId;
+    gTasks[taskId].tStat = STAT_HP;
+    gTasks[taskId].tInput = ev;
+    gTasks[taskId].tDigit = 0;
+}
+
+void DebugNative_Party_SetEVs(void)
+{
+    if (gSpecialVar_0x8004 < PARTY_SIZE)
+    {
+        u32 taskId = CreateTask(DebugNativeStep_Party_SetEVsMain, 1);
+        gTasks[taskId].tPartyId = gSpecialVar_0x8004;
+    }
+}
+
+#undef tStat
 #undef tPartyId
 
 #undef tMenuTaskId

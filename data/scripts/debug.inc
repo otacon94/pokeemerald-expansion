@@ -455,11 +455,36 @@ Debug_EventScript_KoPokemon::
 	releaseall
 	end
 
+Debug_EventScript_SetNature::
+	special ChoosePartyMon
+	goto_if_ge VAR_0x8004, PARTY_SIZE, Debug_EventScript_InflictStatus1_Close
+	specialvar VAR_RESULT, ScriptGetPartyMonSpecies
+	goto_if_eq VAR_RESULT, SPECIES_EGG, Debug_EventScript_InflictStatus1_Close
+	call Debug_EventScript_ChooseNature
+	goto_if_eq VAR_RESULT, MULTI_B_PRESSED, Debug_EventScript_InflictStatus1_Close
+	copyvar VAR_0x8005, VAR_RESULT
+	callnative DebugNative_Party_SetNature
+	goto_if_eq VAR_RESULT, FALSE, Debug_EventScript_InflictStatus1_Close
+	msgbox Debug_EventScript_Text_NatureChanged, MSGBOX_DEFAULT
+	releaseall
+	end
+
+Debug_EventScript_Text_NatureChanged:
+	.string "{STR_VAR_1} now has a\n{STR_VAR_2} nature!$"
+
 Debug_EventScript_SetHiddenNature::
 	special ChoosePartyMon
 	goto_if_ge VAR_0x8004, PARTY_SIZE, Debug_EventScript_InflictStatus1_Close
 	specialvar VAR_RESULT, ScriptGetPartyMonSpecies
 	goto_if_eq VAR_RESULT, SPECIES_EGG, Debug_EventScript_InflictStatus1_Close
+	call Debug_EventScript_ChooseNature
+	goto_if_eq VAR_RESULT, MULTI_B_PRESSED, Debug_EventScript_InflictStatus1_Close
+	special SetHiddenNature
+	releaseall
+	end
+
+@ Lists every nature and leaves the chosen one in VAR_RESULT.
+Debug_EventScript_ChooseNature:
 	dynmultipush Debug_EventScript_ChangeNature_Text_Hardy, 0
 	dynmultipush Debug_EventScript_ChangeNature_Text_Lonely, 1
 	dynmultipush Debug_EventScript_ChangeNature_Text_Brave, 2
@@ -486,11 +511,7 @@ Debug_EventScript_SetHiddenNature::
 	dynmultipush Debug_EventScript_ChangeNature_Text_Careful, 23
 	dynmultipush Debug_EventScript_ChangeNature_Text_Quirky, 24
 	dynmultistack 0, 0, TRUE, 7, FALSE, 0, NULL
-	switch VAR_RESULT
-	case MULTI_B_PRESSED, Debug_EventScript_InflictStatus1_Close
-	special SetHiddenNature
-	releaseall
-	end
+	return
 
 Debug_EventScript_SetAbility::
 	special ChoosePartyMon
@@ -584,6 +605,32 @@ Debug_EventScript_SetLevel::
 	goto_if_eq VAR_RESULT, SPECIES_EGG, Debug_EventScript_SetLevel_End
 	callnative DebugNative_Party_SetLevel
 Debug_EventScript_SetLevel_End::
+	releaseall
+	end
+
+Debug_EventScript_SetIVs::
+	lockall
+	getpartysize
+	goto_if_eq VAR_RESULT, 0, Debug_NoPokemon
+	special ChoosePartyMon
+	goto_if_ge VAR_0x8004, PARTY_SIZE, Debug_EventScript_SetIVs_End
+	specialvar VAR_RESULT, ScriptGetPartyMonSpecies
+	goto_if_eq VAR_RESULT, SPECIES_EGG, Debug_EventScript_SetIVs_End
+	callnative DebugNative_Party_SetIVs
+Debug_EventScript_SetIVs_End::
+	releaseall
+	end
+
+Debug_EventScript_SetEVs::
+	lockall
+	getpartysize
+	goto_if_eq VAR_RESULT, 0, Debug_NoPokemon
+	special ChoosePartyMon
+	goto_if_ge VAR_0x8004, PARTY_SIZE, Debug_EventScript_SetEVs_End
+	specialvar VAR_RESULT, ScriptGetPartyMonSpecies
+	goto_if_eq VAR_RESULT, SPECIES_EGG, Debug_EventScript_SetEVs_End
+	callnative DebugNative_Party_SetEVs
+Debug_EventScript_SetEVs_End::
 	releaseall
 	end
 
