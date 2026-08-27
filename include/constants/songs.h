@@ -544,7 +544,7 @@
 #define PH_NURSE_SOLO               609
 
 
-// Tracce DPPt/HGSS importate
+// Imported DPPt/HGSS tracks
 #define MUS_DP_OREBURGH_MINE        610
 #define MUS_HG_RUINS_OF_ALPH        611
 #define MUS_HG_LIGHTHOUSE           612

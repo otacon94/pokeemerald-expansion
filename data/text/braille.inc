@@ -273,7 +273,7 @@ Braille_Text_ForYou::
 	brailleformat 3, 0, 25, 19, 6, 3
 	.braille "FOR YOU.$"
 
-@ Camera degli Unown di Navel Rock (importata)
+@ Navel Rock Unown chamber (imported)
 UnownChamber_Left_Braille_Text:
 	brailleformat 3, 0, 25, 19, 6, 3
 	.braille "LEFT AND RIGHT\n"

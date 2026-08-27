@@ -44,7 +44,6 @@ VictoryRoad_Moltres2_EventScript_Moltres::
 	setflag FLAG_SYS_CTRL_OBJ_DELETE
 	call_if_set FLAG_DIFFICULTY_HARD, VictoryRoad_Moltres2_EventScript_Moltres_Stats
 	special BattleSetup_StartLegendaryBattle
-	waitstate
 	clearflag FLAG_SYS_CTRL_OBJ_DELETE
 	callnative Script_CalculateMonStats
 	specialvar VAR_RESULT, GetBattleOutcome

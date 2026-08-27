@@ -294,7 +294,7 @@ u8 *ConvertUIntToDecimalStringN(u8 *dest, u32 value, enum StringConvertMode mode
     return dest;
 }
 
-// Come ConvertIntToHexStringN ma senza segno: serve per i PID a 32 bit
+// Same as ConvertIntToHexStringN but unsigned: needed for 32-bit personality values
 u8 *ConvertUIntToHexStringN(u8 *dest, u32 value, enum StringConvertMode mode, u8 n)
 {
     enum { WAITING_FOR_NONZERO_DIGIT, WRITING_DIGITS, WRITING_SPACES } state;

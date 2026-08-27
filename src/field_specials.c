@@ -5780,7 +5780,7 @@ bool8 CheckAddCoins(void)
         return TRUE;
 }
 
-// Portate dalla hack: usate dagli script dei leggendari per scalarne le statistiche
+// Ported from the hack: used by the legendary scripts to scale their stats
 void CheckPkm(void)
 {
     u8 i;
@@ -5849,8 +5849,8 @@ void SetSpDefStat(void)
     SetMonData(&gParties[B_TRAINER_OPPONENT_A][0], MON_DATA_SPDEF, &SpDefStat);
 }
 
-// Equivalente del comando di script 'calculatemonstats' della hack: ricalcola le
-// statistiche di tutta la squadra del giocatore (usato dopo le lotte con i leggendari)
+// Equivalent of the hack's 'calculatemonstats' script command: recalculates the stats
+// of the player's whole party (used after the legendary battles)
 void Script_CalculateMonStats(void)
 {
     u32 i;

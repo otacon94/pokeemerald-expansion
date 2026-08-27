@@ -43,6 +43,7 @@
 #include "random.h"
 #include "region_map.h"
 #include "rtc.h"
+#include "run_settings_menu.h"
 #include "script.h"
 #include "script_menu.h"
 #include "script_pokemon_util.h"
@@ -278,6 +279,7 @@ static void DebugAction_Util_Warp_SelectWarp(u8 taskId);
 static void DebugAction_Util_Weather(u8 taskId);
 static void DebugAction_Util_Weather_SelectId(u8 taskId);
 static void DebugAction_Util_WatchCredits(u8 taskId);
+static void DebugAction_Util_RunSettings(u8 taskId);
 static void DebugAction_Util_CheatStart(u8 taskId);
 
 static void DebugAction_TimeMenu_ChangeTimeOfDay(u8 taskId);
@@ -598,6 +600,7 @@ static const struct DebugMenuOption sDebugMenu_Actions_Utilities[] =
     { COMPOUND_STRING("Set weather…"),      DebugAction_Util_Weather },
     { COMPOUND_STRING("Font Test…"),        DebugAction_ExecuteScript, Debug_EventScript_FontTest },
     { COMPOUND_STRING("Time Functions…"),   DebugAction_OpenSubMenu, sDebugMenu_Actions_TimeMenu, },
+    { COMPOUND_STRING("Run settings…"),      DebugAction_Util_RunSettings },
     { COMPOUND_STRING("Watch credits…"),    DebugAction_Util_WatchCredits },
     { COMPOUND_STRING("Cheat start"),       DebugAction_Util_CheatStart },
     { COMPOUND_STRING("Berry Functions…"),  DebugAction_OpenSubMenu, sDebugMenu_Actions_BerryFunctions },
@@ -1742,6 +1745,15 @@ static void DebugAction_Util_Weather_SelectId(u8 taskId)
         PlaySE(SE_SELECT);
         DebugAction_DestroyExtraWindow(taskId);
     }
+}
+
+// Reopens the run settings menu (encounters, difficulty) from the overworld
+static void DebugAction_Util_RunSettings(u8 taskId)
+{
+    Debug_DestroyMenu_Full(taskId);
+    CleanupOverworldWindowsAndTilemaps();
+    gMain.savedCallback = CB2_ReturnToFieldContinueScript;
+    SetMainCallback2(CB2_InitRunSettingsMenu);
 }
 
 static void DebugAction_Util_WatchCredits(u8 taskId)
@@ -5592,7 +5604,7 @@ static void DebugAction_Party_SetParty(u8 taskId)
 }
 
 // *******************************
-// Pokémon Creator (editor a pagine portato dalla hack)
+// Pokémon Creator (paged editor ported from the hack)
 static void DebugAction_PkmCreator_Party_Add(u8 taskId)
 {
     Debug_DestroyMenu_Full(taskId);

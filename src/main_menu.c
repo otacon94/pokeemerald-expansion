@@ -14,6 +14,9 @@
 #include "link.h"
 #include "main.h"
 #include "main_menu.h"
+#include "run_settings_menu.h"
+#include "constants/difficulty.h"
+#include "wild_encounter.h"
 #include "menu.h"
 #include "list_menu.h"
 #include "mystery_event_menu.h"
@@ -192,6 +195,8 @@ static void Task_HandleMainMenuInput(u8);
 static void Task_HandleMainMenuAPressed(u8);
 static void Task_HandleMainMenuBPressed(u8);
 static void Task_NewGameBirchSpeech_Init(u8);
+static void Task_NewGameOpenRunSettings(u8);
+static void CB2_ReturnFromRunSettings(void);
 static void Task_DisplayMainMenuInvalidActionError(u8);
 static void AddBirchSpeechObjects(u8);
 static void Task_NewGameBirchSpeech_WaitToShowBirch(u8);
@@ -1091,7 +1096,7 @@ static void Task_HandleMainMenuAPressed(u8 taskId)
 
             gPlttBufferUnfaded[0] = RGB_BLACK;
             gPlttBufferFaded[0] = RGB_BLACK;
-            gTasks[taskId].func = Task_NewGameBirchSpeech_Init;
+            gTasks[taskId].func = Task_NewGameOpenRunSettings;
             break;
         case ACTION_CONTINUE:
             gPlttBufferUnfaded[0] = RGB_BLACK;
@@ -1293,6 +1298,44 @@ static void HighlightSelectedMainMenuItem(enum PartyMenuType menuType, u8 select
 #define tLotadSpriteId data[9]
 #define tBrendanSpriteId data[10]
 #define tMaySpriteId data[11]
+
+// Lets the player pick the run settings (encounters, difficulty) before the Birch speech.
+static void Task_NewGameOpenRunSettings(u8 taskId)
+{
+    DestroyTask(taskId);
+    FreeAllWindowBuffers();
+    // Each new run starts from the defaults instead of inheriting the previous save's choices.
+    // NewGameInitData keeps whatever is picked here across the save wipe.
+    VarSet(VAR_ENCOUNTER_MODE, ENCOUNTER_MODE_VANILLA);
+    VarSet(VAR_RUN_DIFFICULTY, DIFFICULTY_NORMAL);
+    FlagClear(FLAG_DIFFICULTY_HARD);
+    gMain.savedCallback = CB2_ReturnFromRunSettings;
+    SetMainCallback2(CB2_InitRunSettingsMenu);
+}
+
+// Rebuilds the main menu context and starts the Birch speech from the beginning.
+// Task_NewGameBirchSpeech_Init takes care of the sprites, palettes and windows itself.
+static void CB2_ReturnFromRunSettings(void)
+{
+    ResetBgsAndClearDma3BusyFlags(0);
+    SetVBlankCallback(NULL);
+    SetGpuReg(REG_OFFSET_DISPCNT, 0);
+    InitBgsFromTemplates(0, sMainMenuBgTemplates, ARRAY_COUNT(sMainMenuBgTemplates));
+    InitBgFromTemplate(&sBirchBgTemplate);
+    DmaFill16(3, 0, VRAM, VRAM_SIZE);
+    DmaFill32(3, 0, OAM, OAM_SIZE);
+    DmaFill16(3, 0, PLTT, PLTT_SIZE);
+    ResetPaletteFade();
+    ScanlineEffect_Stop();
+    ResetTasks();
+    ResetSpriteData();
+    FreeAllSpritePalettes();
+    ResetAllPicSprites();
+    CreateTask(Task_NewGameBirchSpeech_Init, 0);
+    IntrEnable(INTR_FLAG_VBLANK);
+    SetVBlankCallback(VBlankCB_MainMenu);
+    SetMainCallback2(CB2_MainMenu);
+}
 
 static void Task_NewGameBirchSpeech_Init(u8 taskId)
 {

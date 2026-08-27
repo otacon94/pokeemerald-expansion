@@ -152,7 +152,6 @@ NewMauville_Inside_Raikou_RaikouBattle::
 	setflag FLAG_SYS_CTRL_OBJ_DELETE
 	call_if_set FLAG_DIFFICULTY_HARD, NewMauville_Inside_Raikou_RaikouBattle_3_Stats
 	special BattleSetup_StartLegendaryBattle
-	waitstate
 	clearflag FLAG_SYS_CTRL_OBJ_DELETE
 	callnative Script_CalculateMonStats
 	specialvar VAR_RESULT, GetBattleOutcome

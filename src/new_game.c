@@ -163,6 +163,12 @@ void NewGameInitData(void)
 #if IS_FRLG
     u8 rivalName[PLAYER_NAME_LENGTH + 1];
 #endif
+    // The run settings are picked before the save data is wiped, so keep them across it
+    u16 encounterMode = VarGet(VAR_ENCOUNTER_MODE);
+    u16 difficulty = VarGet(VAR_RUN_DIFFICULTY);
+    bool8 hardDifficultyFlag = FlagGet(FLAG_DIFFICULTY_HARD);
+    bool8 runSettingsSet = FlagGet(FLAG_RUN_SETTINGS_SET);
+
     if (gSaveFileStatus == SAVE_STATUS_EMPTY || gSaveFileStatus == SAVE_STATUS_CORRUPT)
         RtcReset();
 
@@ -184,6 +190,14 @@ void NewGameInitData(void)
     PlayTimeCounter_Reset();
     ClearPokedexFlags();
     InitEventData();
+    VarSet(VAR_ENCOUNTER_MODE, encounterMode);
+    VarSet(VAR_RUN_DIFFICULTY, difficulty);
+    if (hardDifficultyFlag)
+        FlagSet(FLAG_DIFFICULTY_HARD);
+    else
+        FlagClear(FLAG_DIFFICULTY_HARD);
+    if (runSettingsSet)
+        FlagSet(FLAG_RUN_SETTINGS_SET);
     ClearTVShowData();
     ResetGabbyAndTy();
     ClearSecretBases();

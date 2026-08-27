@@ -339,7 +339,10 @@
 #endif // TESTING
 
 
-// Var degli eventi leggendari importati dalla hack
+// Difficulty picked when starting a new game (used by B_VAR_DIFFICULTY)
+#define VAR_RUN_DIFFICULTY                               VAR_UNUSED_0x40A8
+
+// Vars for the imported legendary events
 #define VAR_ENTEI_EVENT                                  VAR_UNUSED_0x4083
 #define VAR_RAIKOU_EVENT                                 VAR_UNUSED_0x408B
 #define VAR_SUICUNE_EVENT                                VAR_UNUSED_0x4091

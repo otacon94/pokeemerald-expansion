@@ -16,6 +16,7 @@
 #include "menu.h"
 #include "overworld.h"
 #include "palette.h"
+#include "rtc.h"
 #include "sound.h"
 #include "sprite.h"
 #include "task.h"
@@ -862,6 +863,29 @@ static u8 GetBattleEnvironmentByMapScene(u8 mapBattleScene)
 }
 
 // Loads the initial battle environment.
+// The battle background lives in BG palettes 2 through 4
+#define BATTLE_BG_PALETTES ((1 << 2) | (1 << 3) | (1 << 4))
+
+// Applies the overworld's time of day tint to the battle background, so a battle
+// fought at night looks like the map it was started from. The textbox, the menu
+// and the Pokemon sprites are left alone so they stay readable.
+static void TintBattleBackgroundForTimeOfDay(void)
+{
+    struct BlendSettings blend;
+
+    if (!B_TIME_OF_DAY_TINT)
+        return;
+
+    blend = gTimeOfDayBlend[GetTimeOfDay()];
+    if (blend.coeff == 0)
+        return;
+
+    // Both blends are the same, so the weight doesn't matter: the result is that blend.
+    // The unfaded buffer is tinted too, otherwise the next fade would wash the tint away.
+    TimeMixPalettes(BATTLE_BG_PALETTES, gPlttBufferUnfaded, gPlttBufferUnfaded, &blend, &blend, 256);
+    TimeMixPalettes(BATTLE_BG_PALETTES, gPlttBufferFaded, gPlttBufferFaded, &blend, &blend, 256);
+}
+
 static void LoadBattleEnvironmentGfx(u16 environment)
 {
     if (environment >= NELEMS(gBattleEnvironmentInfo))
@@ -870,6 +894,7 @@ static void LoadBattleEnvironmentGfx(u16 environment)
     DecompressDataWithHeaderVram(gBattleEnvironmentInfo[environment].background.tileset, (void *)(BG_CHAR_ADDR(2)));
     DecompressDataWithHeaderVram(gBattleEnvironmentInfo[environment].background.tilemap, (void *)(BG_SCREEN_ADDR(26)));
     LoadPalette(gBattleEnvironmentInfo[environment].palette, BG_PLTT_ID(2), 3 * PLTT_SIZE_4BPP);
+    TintBattleBackgroundForTimeOfDay();
 }
 
 // Loads the entry associated with the battle environment.
@@ -1336,6 +1361,7 @@ bool8 LoadChosenBattleElement(u8 caseId)
         break;
     case 5:
         LoadPalette(gBattleEnvironmentInfo[GetBattleEnvironmentOverride()].palette, BG_PLTT_ID(2), 3 * PLTT_SIZE_4BPP);
+        TintBattleBackgroundForTimeOfDay();
         break;
     case 6:
         LoadBattleMenuWindowGfx();

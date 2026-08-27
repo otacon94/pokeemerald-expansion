@@ -139,7 +139,6 @@ NavelRock_Unown_Room_1_Second_Trigger::
 	special SetSpDefStat
 	special SetSpdStat
 	special BattleSetup_StartLegendaryBattle
-	waitstate
 	callnative Script_CalculateMonStats
 	specialvar VAR_RESULT, GetBattleOutcome
 	goto_if_eq VAR_RESULT, B_OUTCOME_WON, NavelRock_Unown_Room_1_Second_Trigger_Battle_Finished
@@ -425,7 +424,6 @@ NavelRock_Unown_Room_1_Final_Trigger::
 	special SetSpDefStat
 	special SetSpdStat
 	special BattleSetup_StartLegendaryBattle
-	waitstate
 	callnative Script_CalculateMonStats
 	specialvar VAR_RESULT, GetBattleOutcome
 	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, NavelRock_Unown_Room_1_Final_Trigger_Battle_Caught

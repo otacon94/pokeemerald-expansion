@@ -202,7 +202,7 @@
 .include "sound/voicegroups/rg_sevii_67.inc"
 .include "sound/voicegroups/drumsets/rg_credits.inc"
 
-@ Banchi strumenti DPPt (191) e HGSS (229) importati, con i loro keysplit
+@ Imported DPPt (191) and HGSS (229) instrument banks, with their keysplits
 .include "sound/voicegroups/voicegroup191.inc"
 .include "sound/voicegroups/voicegroup192.inc"
 .include "sound/voicegroups/voicegroup193.inc"

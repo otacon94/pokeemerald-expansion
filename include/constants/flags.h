@@ -1642,7 +1642,7 @@
 #define NUM_DAILY_FLAGS                             (DAILY_FLAGS_END - DAILY_FLAGS_START + 1)
 
 
-// Flag degli eventi leggendari importati dalla hack
+// Flags for the imported legendary events
 #define FLAG_DEFEATED_ARTICUNO           FLAG_UNUSED_0x022
 #define FLAG_DEFEATED_ENTEI              FLAG_UNUSED_0x023
 #define FLAG_DEFEATED_MEWTWO             FLAG_UNUSED_0x024
@@ -1673,11 +1673,16 @@
 #define FLAG_SET_BATTLE_BGM              FLAG_UNUSED_0x03D
 
 
-// Flag delle Poke Ball nelle grotte importate
+// Item ball flags for the imported caves
 #define FLAG_CAVE_MOONSTONE              FLAG_UNUSED_0x03E
 #define FLAG_CAVE_SUNSTONE               FLAG_UNUSED_0x03F
-// Oggetto nascosto: deve stare nel blocco degli hidden item (stesso valore della hack, 0x267)
+// Hidden item: must live in the hidden item block (same value as the hack, 0x267)
 #define FLAG_CERULEAN_CAVE_LUCKY_EGG     (FLAG_HIDDEN_ITEMS_START + 0x73)
+
+
+// Set once the run settings have been picked, so an existing save isn't silently
+// treated as Easy (difficulty 0) after the difficulty var was enabled
+#define FLAG_RUN_SETTINGS_SET            FLAG_UNUSED_0x040
 
 #define FLAGS_COUNT (DAILY_FLAGS_END + 1)
 

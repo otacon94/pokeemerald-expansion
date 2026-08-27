@@ -4,7 +4,7 @@ CeruleanCave2_MapScripts::
 	.byte 0
 
 CeruleanCave2_OnTransition::
-	goto_if_eq VAR_ENCOUNTER_MODE, 0, CeruleanCave2_HideFossilsFromNativeEncounters @ 0 = incontri vanilla
+	goto_if_eq VAR_ENCOUNTER_MODE, 0, CeruleanCave2_HideFossilsFromNativeEncounters @ 0 = vanilla encounters
 	end
 
 CeruleanCave2_HideFossilsFromNativeEncounters::

@@ -273,7 +273,6 @@ MagmaHideout_3F_1R_Entei_EnteiFinalBattle::
 	setflag FLAG_SYS_CTRL_OBJ_DELETE
 	call_if_set FLAG_DIFFICULTY_HARD, MagmaHideout_3F_1R_Entei_EnteiBattle4_Stats
 	special BattleSetup_StartLegendaryBattle
-	waitstate
 	clearflag FLAG_SYS_CTRL_OBJ_DELETE
 	callnative Script_CalculateMonStats
 	specialvar VAR_RESULT, GetBattleOutcome

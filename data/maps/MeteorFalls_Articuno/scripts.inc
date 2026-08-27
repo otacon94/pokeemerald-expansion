@@ -40,7 +40,6 @@ MeteorFalls_Articuno_EventScript_Articuno::
 	setflag FLAG_SYS_CTRL_OBJ_DELETE
 	call_if_set FLAG_DIFFICULTY_HARD, MeteorFalls_Articuno_EventScript_Articuno_Stats
 	special BattleSetup_StartLegendaryBattle
-	waitstate
 	clearflag FLAG_SYS_CTRL_OBJ_DELETE
 	callnative Script_CalculateMonStats
 	specialvar VAR_RESULT, GetBattleOutcome

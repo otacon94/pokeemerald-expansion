@@ -604,8 +604,8 @@ static u32 DebugPkmCreator_GetOtId(void)
     return sDebugPkmCreatorData.data[VAL_TID] | (sDebugPkmCreatorData.data[VAL_SID] << 16);
 }
 
-// Nell'expansion la shininess e' il valore grezzo XOR il bit shinyModifier del mon,
-// quindi per l'anteprima di un PID diverso serve recuperare quel bit
+// In the expansion shininess is the raw shiny value XOR the mon's shinyModifier bit,
+// so previewing a different personality means recovering that bit first
 static bool8 DebugPkmCreator_GetShinyModifier(void)
 {
     bool8 natural = GET_SHINY_VALUE(DebugPkmCreator_GetOtId(), sDebugPkmCreatorData.data[VAL_PID]) < SHINY_ODDS;
@@ -1550,9 +1550,9 @@ static void DebugPkmCreator_EditModeRedraw(u32 digit, u8 editIndex)
 
 
 
-// L'expansion ha un bit shinyModifier sul mon: SetMonData(MON_DATA_IS_SHINY) inverte
-// la shininess naturale senza toccare il PID, quindi natura, sesso, abilita', lettera
-// di Unown e macchie di Spinda restano esattamente com'erano.
+// The expansion stores a shinyModifier bit on the mon: SetMonData(MON_DATA_IS_SHINY)
+// flips the natural shininess without touching the personality, so nature, gender,
+// ability, Unown letter and Spinda spots all stay exactly as they were.
 static void DebugPkmCreator_ToggleShiny(void)
 {
     u32 isShiny = !sDebugPkmCreatorData.data[VAL_IS_SHINY];

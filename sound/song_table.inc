@@ -617,7 +617,7 @@ gSongTable::
 	song ph_nurse_held, MUSIC_PLAYER_SE2, 2
 	song ph_nurse_solo, MUSIC_PLAYER_SE2, 2
 
-	@ Tracce DPPt/HGSS importate
+	@ Imported DPPt/HGSS tracks
 	song mus_dp_oreburgh_mine, MUSIC_PLAYER_BGM, 0
 	song mus_hg_ruins_of_alph, MUSIC_PLAYER_BGM, 0
 	song mus_hg_lighthouse, MUSIC_PLAYER_BGM, 0
