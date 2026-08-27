@@ -176,7 +176,7 @@ ShoalCave_LowTideIceRoom_Suicune_SuicuneFinalBattle::
 	special BattleSetup_StartLegendaryBattle
 	waitstate
 	clearflag FLAG_SYS_CTRL_OBJ_DELETE
-	calculatemonstats
+	callnative Script_CalculateMonStats
 	specialvar VAR_RESULT, GetBattleOutcome
 	goto_if_eq VAR_RESULT, B_OUTCOME_WON, ShoalCave_LowTideIceRoom_Suicune_SuicuneFinalBattle_Won
 	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, ShoalCave_LowTideIceRoom_Suicune_SuicuneFinalBattle_Won

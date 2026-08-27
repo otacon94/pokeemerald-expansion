@@ -276,7 +276,7 @@ MagmaHideout_3F_1R_Entei_EnteiFinalBattle::
 	special BattleSetup_StartLegendaryBattle
 	waitstate
 	clearflag FLAG_SYS_CTRL_OBJ_DELETE
-	calculatemonstats
+	callnative Script_CalculateMonStats
 	specialvar VAR_RESULT, GetBattleOutcome
 	goto_if_eq VAR_RESULT, B_OUTCOME_WON, MagmaHideout_3F_1R_EnteiFinalBattle_Won
 	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, MagmaHideout_3F_1R_EnteiFinalBattle_Won

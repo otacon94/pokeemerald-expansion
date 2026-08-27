@@ -46,7 +46,7 @@ VictoryRoad_Moltres2_EventScript_Moltres::
 	special BattleSetup_StartLegendaryBattle
 	waitstate
 	clearflag FLAG_SYS_CTRL_OBJ_DELETE
-	calculatemonstats
+	callnative Script_CalculateMonStats
 	specialvar VAR_RESULT, GetBattleOutcome
 	goto_if_eq VAR_RESULT, B_OUTCOME_WON, VictoryRoad_Moltres2_EventScript_DefeatedMoltres
 	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, VictoryRoad_Moltres2_EventScript_RanFromMoltres

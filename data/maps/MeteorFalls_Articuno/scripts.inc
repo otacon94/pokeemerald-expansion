@@ -42,7 +42,7 @@ MeteorFalls_Articuno_EventScript_Articuno::
 	special BattleSetup_StartLegendaryBattle
 	waitstate
 	clearflag FLAG_SYS_CTRL_OBJ_DELETE
-	calculatemonstats
+	callnative Script_CalculateMonStats
 	specialvar VAR_RESULT, GetBattleOutcome
 	goto_if_eq VAR_RESULT, B_OUTCOME_WON, MeteorFalls_Articuno_EventScript_DefeatedArticuno
 	goto_if_eq VAR_RESULT, B_OUTCOME_RAN, MeteorFalls_Articuno_EventScript_RanFromArticuno

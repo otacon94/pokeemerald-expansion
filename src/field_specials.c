@@ -5848,3 +5848,13 @@ void SetSpDefStat(void)
     u16 SpDefStat = gSpecialVar_0x8006;
     SetMonData(&gEnemyParty[0], MON_DATA_SPDEF, &SpDefStat);
 }
+
+// Equivalente del comando di script 'calculatemonstats' della hack: ricalcola le
+// statistiche di tutta la squadra del giocatore (usato dopo le lotte con i leggendari)
+void Script_CalculateMonStats(void)
+{
+    u32 i;
+
+    for (i = 0; i < PARTY_SIZE; i++)
+        CalculateMonStats(&gPlayerParty[i]);
+}

@@ -156,7 +156,7 @@ NewMauville_Inside_Raikou_RaikouBattle::
 	special BattleSetup_StartLegendaryBattle
 	waitstate
 	clearflag FLAG_SYS_CTRL_OBJ_DELETE
-	calculatemonstats
+	callnative Script_CalculateMonStats
 	specialvar VAR_RESULT, GetBattleOutcome
 	goto_if_eq VAR_RESULT, B_OUTCOME_WON, NewMauville_Inside_Raikou_Won
 	goto_if_eq VAR_RESULT, B_OUTCOME_CAUGHT, NewMauville_Inside_Raikou_Won
