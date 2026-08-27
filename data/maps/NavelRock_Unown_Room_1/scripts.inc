@@ -24,8 +24,8 @@ NavelRock_Unown_Room_1_U_Guide::
 	waitmoncry
 	msgbox NavelRock_Unown_Room_1_U_Guide_Text, MSGBOX_YESNO
 	switch VAR_RESULT
-	case NO, Debug_Script_1_Closemessage
-	case MULTI_B_PRESSED, Debug_Script_1_Closemessage
+	case NO, NavelRockUnownRoom1_CloseMessage
+	case MULTI_B_PRESSED, NavelRockUnownRoom1_CloseMessage
 	closemessage
 	warp MAP_NAVEL_ROCK_UNOWN_CHAMBER, 12, 12
 	end
@@ -40,7 +40,7 @@ NavelRock_Unown_Room_1_U_Guide_Text:
 
 NavelRock_Unown_Room_1_First_Trigger::
 	lock
-	goto_if_gt VAR_TEST_DARK, 0, Debug_Script_1_Closemessage
+	goto_if_gt VAR_TEST_DARK, 0, NavelRockUnownRoom1_CloseMessage
 	setvar VAR_TEST_DARK, 1
 	playmoncry SPECIES_UNOWN, CRY_MODE_NORMAL
 	waitmoncry
@@ -110,7 +110,7 @@ LOCALID_D_Movement:
 
 NavelRock_Unown_Room_1_Second_Trigger::
 	lock
-	goto_if_gt VAR_TEST_DARK, 1, Debug_Script_1_Closemessage
+	goto_if_gt VAR_TEST_DARK, 1, NavelRockUnownRoom1_CloseMessage
 	playmoncry SPECIES_ARCEUS, CRY_MODE_NORMAL
 	waitmoncry
 	msgbox NavelRock_Unown_Room_1_Second_Trigger_Text, MSGBOX_YESNO
@@ -250,7 +250,7 @@ NavelRock_Unown_Room_1_Talk_Arceus::
 	closemessage
 	setvar 0x8002, SPECIES_ARCEUS
 	special CheckPkm
-	goto_if_eq VAR_RESULT, FALSE, Debug_Script_1_Closemessage
+	goto_if_eq VAR_RESULT, FALSE, NavelRockUnownRoom1_CloseMessage
 	playmoncry SPECIES_ARCEUS, CRY_MODE_NORMAL
 	waitmoncry
 	faceplayer
@@ -281,7 +281,7 @@ NavelRock_Unown_Room_1_Talk_Arceus_Text2:
 
 NavelRock_Unown_Room_1_Third_Trigger::
 	lock
-	goto_if_gt VAR_TEST_DARK, 2, Debug_Script_1_Closemessage
+	goto_if_gt VAR_TEST_DARK, 2, NavelRockUnownRoom1_CloseMessage
 	setvar VAR_TEST_DARK, 3
 	playbgm MUS_DP_HALL_OF_ORIGIN, TRUE
 	playmoncry SPECIES_UNOWN, CRY_MODE_NORMAL
@@ -391,7 +391,7 @@ LOCALID_EM_Movement:
 
 NavelRock_Unown_Room_1_Final_Trigger::
 	lock
-	goto_if_gt VAR_TEST_DARK, 3, Debug_Script_1_Closemessage
+	goto_if_gt VAR_TEST_DARK, 3, NavelRockUnownRoom1_CloseMessage
 	playmoncry SPECIES_UNOWN, CRY_MODE_ENCOUNTER
 	waitmoncry
 	setvar VAR_0x8004, 1   @ vertical pan
@@ -504,7 +504,7 @@ NavelRock_Unown_Room_1_Final_Trigger_Text:
 	.string "in your final challenge?$"
 
 NavelRock_Unown_Room_1_Ending_Trigger::
-	goto_if_gt VAR_TEST_DARK, 4, Debug_Script_1_Closemessage
+	goto_if_gt VAR_TEST_DARK, 4, NavelRockUnownRoom1_CloseMessage
 	setvar VAR_TEST_DARK, 5
 	msgbox NavelRock_Unown_Room_1_Ending_Trigger_Text, MSGBOX_DEFAULT
 	closemessage
@@ -525,3 +525,7 @@ NavelRock_Unown_Room_1_Ending_Trigger_Text:
 	.string "with gratitude,\p"
 	.string "its creator,\p"
 	.string "Resetes12.$"
+
+NavelRockUnownRoom1_CloseMessage::
+	closemessage
+	end

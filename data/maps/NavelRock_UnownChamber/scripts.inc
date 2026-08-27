@@ -25,8 +25,8 @@ NavelRock_UnownChamber_U_A::
 	waitmoncry
 	msgbox NavelRock_UnownChamber_U_A_Text, MSGBOX_YESNO
 	switch VAR_RESULT
-	case NO, Debug_Script_1_Closemessage
-	case MULTI_B_PRESSED, Debug_Script_1_Closemessage
+	case NO, NavelRockUnownChamber_CloseMessage
+	case MULTI_B_PRESSED, NavelRockUnownChamber_CloseMessage
 	closemessage
 	warp MAP_NAVEL_ROCK_UNOWN_ROOM_1, 1, 78
 	end
@@ -174,3 +174,7 @@ Test_Message_Unown:
 	.string "It quickly fades away in many\n"
 	.string "directions, including outside\l"
 	.string "of this chamber.$"
+
+NavelRockUnownChamber_CloseMessage::
+	closemessage
+	end

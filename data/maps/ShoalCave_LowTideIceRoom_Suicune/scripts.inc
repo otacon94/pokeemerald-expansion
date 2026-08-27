@@ -4,7 +4,6 @@
 
 ShoalCave_LowTideIceRoom_Suicune_MapScripts::
 	map_script MAP_SCRIPT_ON_TRANSITION, ShoalCave_LowTideIceRoom_Suicune_OnTransition
-	map_script MAP_SCRIPT_ON_RESUME, EncounterTable
 	.byte 0
 
 ShoalCave_LowTideIceRoom_Suicune_OnTransition::
