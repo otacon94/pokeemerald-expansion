@@ -1672,6 +1672,13 @@
 #define FLAG_NO_BAG_USE                  FLAG_UNUSED_0x03C
 #define FLAG_SET_BATTLE_BGM              FLAG_UNUSED_0x03D
 
+
+// Flag delle Poke Ball nelle grotte importate
+#define FLAG_CAVE_MOONSTONE              FLAG_UNUSED_0x03E
+#define FLAG_CAVE_SUNSTONE               FLAG_UNUSED_0x03F
+// Oggetto nascosto: deve stare nel blocco degli hidden item (stesso valore della hack, 0x267)
+#define FLAG_CERULEAN_CAVE_LUCKY_EGG     (FLAG_HIDDEN_ITEMS_START + 0x73)
+
 #define FLAGS_COUNT (DAILY_FLAGS_END + 1)
 
 // Special Flags (Stored in EWRAM (sSpecialFlags), not in the SaveBlock)
