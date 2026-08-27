@@ -5788,7 +5788,7 @@ void CheckPkm(void)
     struct Pokemon *pokemon;
     for (i = 0; i < CalculatePlayerPartyCount(); i++)
     {
-        pokemon = &gPlayerParty[i];
+        pokemon = &gParties[B_TRAINER_PLAYER][i];
         if (GetMonData(pokemon, MON_DATA_SANITY_HAS_SPECIES) && !GetMonData(pokemon, MON_DATA_IS_EGG))
         {
             species = GetMonData(pokemon, MON_DATA_SPECIES);
@@ -5810,43 +5810,43 @@ void CheckPkm(void)
 void SetHpStat(void)
 {
     u16 HpStat = gSpecialVar_0x8000;
-    SetMonData(&gEnemyParty[0], MON_DATA_HP, &HpStat);
-    SetMonData(&gEnemyParty[0], MON_DATA_MAX_HP, &HpStat);
+    SetMonData(&gParties[B_TRAINER_OPPONENT_A][0], MON_DATA_HP, &HpStat);
+    SetMonData(&gParties[B_TRAINER_OPPONENT_A][0], MON_DATA_MAX_HP, &HpStat);
 }
 
 // Sets the Atk Stat of the Pokémon according to the current value of var 0x8001
 void SetAtkStat(void)
 {
     u16 AtkStat = gSpecialVar_0x8001;
-    SetMonData(&gEnemyParty[0], MON_DATA_ATK, &AtkStat);
+    SetMonData(&gParties[B_TRAINER_OPPONENT_A][0], MON_DATA_ATK, &AtkStat);
 }
 
 // Sets the Def Stat of the Pokémon according to the current value of var 0x8002
 void SetDefStat(void)
 {
     u16 DefStat = gSpecialVar_0x8002;
-    SetMonData(&gEnemyParty[0], MON_DATA_DEF, &DefStat);
+    SetMonData(&gParties[B_TRAINER_OPPONENT_A][0], MON_DATA_DEF, &DefStat);
 }
 
 // Sets the Spd Stat of the Pokémon according to the current value of var 0x8003
 void SetSpdStat(void)
 {
     u16 SpdStat = gSpecialVar_0x8003;
-    SetMonData(&gEnemyParty[0], MON_DATA_SPEED, &SpdStat);
+    SetMonData(&gParties[B_TRAINER_OPPONENT_A][0], MON_DATA_SPEED, &SpdStat);
 }
 
 // Sets the SpAtk Stat of the Pokémon according to the current value of var 0x8005
 void SetSpAtkStat(void)
 {
     u16 SpAtkStat = gSpecialVar_0x8005;
-    SetMonData(&gEnemyParty[0], MON_DATA_SPATK, &SpAtkStat);
+    SetMonData(&gParties[B_TRAINER_OPPONENT_A][0], MON_DATA_SPATK, &SpAtkStat);
 }
 
 // Sets the SpDef Stat of the Pokémon according to the current value of var 0x8006
 void SetSpDefStat(void)
 {
     u16 SpDefStat = gSpecialVar_0x8006;
-    SetMonData(&gEnemyParty[0], MON_DATA_SPDEF, &SpDefStat);
+    SetMonData(&gParties[B_TRAINER_OPPONENT_A][0], MON_DATA_SPDEF, &SpDefStat);
 }
 
 // Equivalente del comando di script 'calculatemonstats' della hack: ricalcola le
@@ -5856,5 +5856,5 @@ void Script_CalculateMonStats(void)
     u32 i;
 
     for (i = 0; i < PARTY_SIZE; i++)
-        CalculateMonStats(&gPlayerParty[i]);
+        CalculateMonStats(&gParties[B_TRAINER_PLAYER][i]);
 }

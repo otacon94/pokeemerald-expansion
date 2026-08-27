@@ -518,7 +518,7 @@ void DebugPkmCreator_Init(u8 mode, u8 index)
     switch (mode) {
     case 0:
     case 6:
-        mons = &gEnemyParty[0];
+        mons = &gParties[B_TRAINER_OPPONENT_A][0];
         ZeroMonData(mons); // Is this really necessary?
         ZeroMonData(&sDebugPkmCreatorData.mon);
         sDebugPkmCreatorData.monBeingEdited = mons;
@@ -526,7 +526,7 @@ void DebugPkmCreator_Init(u8 mode, u8 index)
         break;
     case 1:
     case 5: // used in Debug Battle
-        mons = &gPlayerParty[sDebugPkmCreatorData.index];
+        mons = &gParties[B_TRAINER_PLAYER][sDebugPkmCreatorData.index];
         if (mode == 1) 
             CopyMon(&sDebugPkmCreatorData.mon, mons, sizeof(struct Pokemon));
         sDebugPkmCreatorData.monBeingEdited = mons;
@@ -539,7 +539,7 @@ void DebugPkmCreator_Init(u8 mode, u8 index)
         break;
     case 3:
     case 4: // used in Debug Battle
-        mons = &gEnemyParty[sDebugPkmCreatorData.index];
+        mons = &gParties[B_TRAINER_OPPONENT_A][sDebugPkmCreatorData.index];
         if (mode == 3)
             CopyMon(&sDebugPkmCreatorData.mon, mons, sizeof(struct Pokemon));
         sDebugPkmCreatorData.monBeingEdited = mons;
@@ -548,7 +548,7 @@ void DebugPkmCreator_Init(u8 mode, u8 index)
     case 8:
     default:
         if (mode == 8)
-            CopyMon(&sDebugPkmCreatorData.mon, &gPlayerParty[0], sizeof(struct Pokemon));
+            CopyMon(&sDebugPkmCreatorData.mon, &gParties[B_TRAINER_PLAYER][0], sizeof(struct Pokemon));
         else
             ZeroMonData(&sDebugPkmCreatorData.mon);
         sDebugPkmCreatorData.monBeingEdited = &sDebugPkmCreatorData.mon;
@@ -557,14 +557,14 @@ void DebugPkmCreator_Init(u8 mode, u8 index)
     case 9: // Add to enemy party
         for (i = 0; i < PARTY_SIZE; i++)
         {
-            if (GetMonData(&gEnemyParty[i], MON_DATA_SANITY_HAS_SPECIES))
+            if (GetMonData(&gParties[B_TRAINER_OPPONENT_A][i], MON_DATA_SANITY_HAS_SPECIES))
                 continue;
             else
                 break;
         }
         if (i >= PARTY_SIZE)
             return;
-        mons = &gEnemyParty[i];
+        mons = &gParties[B_TRAINER_OPPONENT_A][i];
         ZeroMonData(mons); // Is this really necessary?
         ZeroMonData(&sDebugPkmCreatorData.mon);
         sDebugPkmCreatorData.monBeingEdited = mons;
@@ -572,7 +572,7 @@ void DebugPkmCreator_Init(u8 mode, u8 index)
         break;
     case 10: // Edit enemy party at index
         sDebugPkmCreatorData.index = index;
-        mons = &gEnemyParty[sDebugPkmCreatorData.index];
+        mons = &gParties[B_TRAINER_OPPONENT_A][sDebugPkmCreatorData.index];
         CopyMon(&sDebugPkmCreatorData.mon, mons, sizeof(struct Pokemon));
         sDebugPkmCreatorData.monBeingEdited = mons;
         break;
@@ -1628,14 +1628,14 @@ static void DebugPkmCreator_ProcessInput(u8 taskid)
             break;
         case 1:
         case 5:
-            mons = &gPlayerParty[sDebugPkmCreatorData.index];
+            mons = &gParties[B_TRAINER_PLAYER][sDebugPkmCreatorData.index];
             sDebugPkmCreatorData.monBeingEdited = mons;
             CopyMon(&sDebugPkmCreatorData.mon, mons, sizeof(struct Pokemon));
             break;
         case 3:
         case 4:
         case 10:
-            mons = &gEnemyParty[sDebugPkmCreatorData.index];
+            mons = &gParties[B_TRAINER_OPPONENT_A][sDebugPkmCreatorData.index];
             sDebugPkmCreatorData.monBeingEdited = mons;
             CopyMon(&sDebugPkmCreatorData.mon, mons, sizeof(struct Pokemon));
             break;
@@ -1678,14 +1678,14 @@ static void DebugPkmCreator_ProcessInput(u8 taskid)
             break;
         case 1:
         case 5:
-            mons = &gPlayerParty[sDebugPkmCreatorData.index];
+            mons = &gParties[B_TRAINER_PLAYER][sDebugPkmCreatorData.index];
             sDebugPkmCreatorData.monBeingEdited = mons;
             CopyMon(&sDebugPkmCreatorData.mon, mons, sizeof(struct Pokemon));
             break;
         case 3:
         case 4:
         case 10:
-            mons = &gEnemyParty[sDebugPkmCreatorData.index];
+            mons = &gParties[B_TRAINER_OPPONENT_A][sDebugPkmCreatorData.index];
             sDebugPkmCreatorData.monBeingEdited = mons;
             CopyMon(&sDebugPkmCreatorData.mon, mons, sizeof(struct Pokemon));
             break;
@@ -2089,15 +2089,15 @@ static u8 DebugPkmCreator_GiveToPlayer(void)
     case 0:
         for (i = 0; i < PARTY_SIZE; i++)
         {
-            if (GetMonData(&gPlayerParty[i], MON_DATA_SPECIES, NULL) == 0)
+            if (GetMonData(&gParties[B_TRAINER_PLAYER][i], MON_DATA_SPECIES, NULL) == 0)
                 break;
         }
 
         if (i >= PARTY_SIZE)
             return CopyMonToPC(mon);
 
-        CopyMon(&gPlayerParty[i], mon, sizeof(*mon));
-        gPlayerPartyCount = i + 1;
+        CopyMon(&gParties[B_TRAINER_PLAYER][i], mon, sizeof(*mon));
+        gPartiesCount[B_TRAINER_PLAYER] = i + 1;
         return MON_GIVEN_TO_PARTY;
     case 1:
     case 3 ... 5:
@@ -2111,15 +2111,15 @@ static u8 DebugPkmCreator_GiveToPlayer(void)
     case 9:
         for (i = 0; i < PARTY_SIZE; i++)
         {
-            if (GetMonData(&gEnemyParty[i], MON_DATA_SPECIES, NULL) == SPECIES_NONE)
+            if (GetMonData(&gParties[B_TRAINER_OPPONENT_A][i], MON_DATA_SPECIES, NULL) == SPECIES_NONE)
                 break;
         }
 
         if (i >= PARTY_SIZE)
             return MON_CANT_GIVE;
 
-        CopyMon(&gEnemyParty[i], mon, sizeof(*mon));
-        gEnemyPartyCount = i + 1;
+        CopyMon(&gParties[B_TRAINER_OPPONENT_A][i], mon, sizeof(*mon));
+        gPartiesCount[B_TRAINER_OPPONENT_A] = i + 1;
         return MON_GIVEN_TO_PARTY;
     case 7:
     case 8:
