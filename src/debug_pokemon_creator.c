@@ -1779,7 +1779,7 @@ static void DebugPkmCreator_EditModeProcessInput(u8 taskid)
     u16 keys = gMain.newKeys;
     u16 heldKeys = gMain.newAndRepeatedKeys;
     struct Task* task = &gTasks[taskid];
-    u32 i, j, min, max, index, indexBeingEdited;
+    u32 i, min, max, index, indexBeingEdited;
     u32 z = 0;
 
     u16 digit = task->data[0];
