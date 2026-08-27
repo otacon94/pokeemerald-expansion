@@ -422,6 +422,61 @@ u8 ChooseWildMonLevel(const struct WildPokemon *wildPokemon, u8 wildMonIndex, en
     }
 }
 
+// Returns how many headers to skip past the vanilla one for the encounter mode in use
+static u32 GetEncounterModeOffset(void)
+{
+    switch (VarGet(VAR_ENCOUNTER_MODE))
+    {
+    case ENCOUNTER_MODE_MODERN:
+        return ENCOUNTER_MODE_TABLE_OFFSET;
+    case ENCOUNTER_MODE_POST_GAME:
+        return FlagGet(FLAG_SYS_GAME_CLEAR) ? ENCOUNTER_MODE_TABLE_OFFSET : 0;
+    case ENCOUNTER_MODE_VANILLA:
+    default:
+        return 0;
+    }
+}
+
+static bool32 IsSameMapHeader(u32 a, u32 b)
+{
+    return gWildMonHeaders[a].mapGroup == gWildMonHeaders[b].mapGroup
+        && gWildMonHeaders[a].mapNum == gWildMonHeaders[b].mapNum;
+}
+
+// Given the first header of a map, returns the header the current encounter mode should use.
+// Falls back to the given one if the map doesn't define an alternate table.
+u32 ApplyEncounterModeToHeaderId(u32 headerId)
+{
+    u32 modeOffset = GetEncounterModeOffset();
+
+    if (modeOffset != 0 && IsSameMapHeader(headerId + modeOffset, headerId))
+        return headerId + modeOffset;
+
+    return headerId;
+}
+
+// TRUE if this header is the one its map uses right now. Needed when walking the whole
+// table (Dex area screen), where the alternate tables would otherwise show up as well.
+bool32 IsWildMonHeaderActiveForEncounterMode(u32 headerId)
+{
+    u32 firstId = headerId;
+
+    while (firstId > 0 && IsSameMapHeader(firstId - 1, headerId))
+        firstId--;
+
+    // The Altering Cave tables are picked by VAR_ALTERING_CAVE_WILD_SET instead
+    if (gWildMonHeaders[headerId].mapGroup == MAP_GROUP(MAP_ALTERING_CAVE)
+     && gWildMonHeaders[headerId].mapNum == MAP_NUM(MAP_ALTERING_CAVE))
+    {
+        u32 alteringCaveId = VarGet(VAR_ALTERING_CAVE_WILD_SET);
+        if (alteringCaveId >= NUM_ALTERING_CAVE_TABLES)
+            alteringCaveId = 0;
+        return headerId == firstId + alteringCaveId;
+    }
+
+    return headerId == ApplyEncounterModeToHeaderId(firstId);
+}
+
 u16 GetCurrentMapWildMonHeaderId(void)
 {
     u16 i;
@@ -443,6 +498,10 @@ u16 GetCurrentMapWildMonHeaderId(void)
                     alteringCaveId = 0;
 
                 i += alteringCaveId;
+            }
+            else
+            {
+                i = ApplyEncounterModeToHeaderId(i);
             }
 
             return i;

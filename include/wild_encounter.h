@@ -7,6 +7,20 @@
 
 #define HEADER_NONE 0xFFFF
 
+// Which set of encounter tables a map uses. Stored in VAR_ENCOUNTER_MODE.
+// A map can define extra tables by adding entries to wild_encounters.json whose
+// base_label is the vanilla one plus a mode suffix (e.g. gRoute101 -> gRoute101_Modern),
+// placed right after the vanilla entry of the same map.
+enum EncounterMode {
+    ENCOUNTER_MODE_VANILLA,   // Vanilla Emerald tables
+    ENCOUNTER_MODE_MODERN,    // Alternate tables, always
+    ENCOUNTER_MODE_POST_GAME, // Vanilla tables until the player becomes Champion, alternate ones afterwards
+    ENCOUNTER_MODE_COUNT
+};
+
+// How many headers to skip past the vanilla one for each mode
+#define ENCOUNTER_MODE_TABLE_OFFSET 1
+
 enum WildPokemonArea {
     WILD_AREA_LAND,
     WILD_AREA_WATER,
@@ -53,6 +67,8 @@ extern bool8 gIsFishingEncounter;
 extern bool8 gIsSurfingEncounter;
 extern u8 gChainFishingDexNavStreak;
 
+u32 ApplyEncounterModeToHeaderId(u32 headerId);
+bool32 IsWildMonHeaderActiveForEncounterMode(u32 headerId);
 u8 ChooseWildMonLevel(const struct WildPokemon *wildPokemon, u8 wildMonIndex, enum WildPokemonArea area);
 void DisableWildEncounters(bool8 disabled);
 bool8 StandardWildEncounter(u16 curMetatileBehavior, u16 prevMetatileBehavior);

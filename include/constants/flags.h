@@ -1641,6 +1641,37 @@
 #define DAILY_FLAGS_END                             (FLAG_UNUSED_0x95F + (7 - FLAG_UNUSED_0x95F % 8))
 #define NUM_DAILY_FLAGS                             (DAILY_FLAGS_END - DAILY_FLAGS_START + 1)
 
+
+// Flag degli eventi leggendari importati dalla hack
+#define FLAG_DEFEATED_ARTICUNO           FLAG_UNUSED_0x022
+#define FLAG_DEFEATED_ENTEI              FLAG_UNUSED_0x023
+#define FLAG_DEFEATED_MEWTWO             FLAG_UNUSED_0x024
+#define FLAG_DEFEATED_MOLTRES            FLAG_UNUSED_0x025
+#define FLAG_DEFEATED_RAIKOU             FLAG_UNUSED_0x026
+#define FLAG_DEFEATED_SUICUNE            FLAG_UNUSED_0x027
+#define FLAG_DIFFICULTY_HARD             FLAG_UNUSED_0x028
+#define FLAG_DOME_FOSSIL_ALTERING_CAVE   FLAG_UNUSED_0x029
+#define FLAG_ENTEI_BATTLE_1              FLAG_UNUSED_0x02A
+#define FLAG_ENTEI_BATTLE_2              FLAG_UNUSED_0x02B
+#define FLAG_ENTEI_BATTLE_3              FLAG_UNUSED_0x02C
+#define FLAG_HELIX_FOSSIL_ALTERING       FLAG_UNUSED_0x02D
+#define FLAG_OLD_AMBER_ALTERING_CAVE     FLAG_UNUSED_0x02E
+#define FLAG_RAIKOU_BATTLE_1             FLAG_UNUSED_0x02F
+#define FLAG_RAIKOU_BATTLE_2             FLAG_UNUSED_0x030
+#define FLAG_SUICUNE_BATTLE_1            FLAG_UNUSED_0x031
+#define FLAG_SUICUNE_BATTLE_2            FLAG_UNUSED_0x032
+#define FLAG_TEST_CAPTURED               FLAG_UNUSED_0x033
+#define FLAG_TEST_DONE                   FLAG_UNUSED_0x034
+#define FLAG_TEST_GUIDE                  FLAG_UNUSED_0x035
+#define FLAG_TEST_HIDE_1                 FLAG_UNUSED_0x036
+#define FLAG_TEST_HIDE_2                 FLAG_UNUSED_0x037
+#define FLAG_UNLOCK_BIRDS                FLAG_UNUSED_0x038
+#define FLAG_UNLOCK_MEWTWO               FLAG_UNUSED_0x039
+#define FLAG_UNOWN_CHAMBER_OPEN          FLAG_UNUSED_0x03A
+#define FLAG_NO_CATCHING                 FLAG_UNUSED_0x03B
+#define FLAG_NO_BAG_USE                  FLAG_UNUSED_0x03C
+#define FLAG_SET_BATTLE_BGM              FLAG_UNUSED_0x03D
+
 #define FLAGS_COUNT (DAILY_FLAGS_END + 1)
 
 // Special Flags (Stored in EWRAM (sSpecialFlags), not in the SaveBlock)

@@ -28,6 +28,10 @@ $(CRY_BIN_DIR)/%.bin: $(CRY_SUBDIR)/%.wav
 $(CRY_BIN_DIR)/uncomp_%.bin: $(CRY_SUBDIR)/uncomp_%.aif
 	$(AIF) $< $@
 
+# Sample .aif importati (banchi DPPt/HGSS): aif2pcm conserva i punti di loop dell'AIFF
+$(SOUND_BIN_DIR)/%.bin: sound/%.aif
+	$(AIF) $< $@
+
 # Uncompressed sounds
 $(SOUND_BIN_DIR)/%.bin: sound/%.wav
 	$(WAV2AGB) -b $< $@

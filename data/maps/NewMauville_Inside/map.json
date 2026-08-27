@@ -127,6 +127,13 @@
       "elevation": 3,
       "dest_map": "MAP_NEW_MAUVILLE_ENTRANCE",
       "dest_warp_id": "1"
+    },
+    {
+      "x": 20,
+      "y": 34,
+      "elevation": 0,
+      "dest_map": "MAP_NEW_MAUVILLE_INSIDE_RAIKOU",
+      "dest_warp_id": "0"
     }
   ],
   "coord_events": [

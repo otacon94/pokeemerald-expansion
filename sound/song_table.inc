@@ -617,6 +617,19 @@ gSongTable::
 	song ph_nurse_held, MUSIC_PLAYER_SE2, 2
 	song ph_nurse_solo, MUSIC_PLAYER_SE2, 2
 
+	@ Tracce DPPt/HGSS importate
+	song mus_dp_oreburgh_mine, MUSIC_PLAYER_BGM, 0
+	song mus_hg_ruins_of_alph, MUSIC_PLAYER_BGM, 0
+	song mus_hg_lighthouse, MUSIC_PLAYER_BGM, 0
+	song mus_hg_ice_path, MUSIC_PLAYER_BGM, 0
+	song mus_hg_dragons_den, MUSIC_PLAYER_BGM, 0
+	song mus_hg_victory_road, MUSIC_PLAYER_BGM, 0
+	song mus_dp_azure_flute, MUSIC_PLAYER_BGM, 0
+	song mus_dp_hall_of_origin, MUSIC_PLAYER_BGM, 0
+	song mus_dp_legend_appears, MUSIC_PLAYER_BGM, 0
+	song mus_hg_credits, MUSIC_PLAYER_BGM, 0
+	song mus_hg_radio_unown, MUSIC_PLAYER_BGM, 0
+
 	.align 2
 dummy_song_header:
 	.byte 0, 0, 0, 0

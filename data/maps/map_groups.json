@@ -470,7 +470,16 @@
     "TerraCave_Entrance",
     "TerraCave_End",
     "AlteringCave",
-    "MeteorFalls_StevensCave"
+    "MeteorFalls_StevensCave",
+    "CeruleanCave1",
+    "CeruleanCave2",
+    "CeruleanCave3",
+    "MagmaHideout_3F_1R_Entei",
+    "MeteorFalls_Articuno",
+    "NewMauville_Inside_Raikou",
+    "ShoalCave_LowTideIceRoom_Suicune",
+    "VictoryRoad_Moltres",
+    "VictoryRoad_Moltres2"
   ],
   "gMapGroup_IndoorDynamic": [
     "SecretBase_RedCave1",
@@ -624,7 +633,11 @@
     "NavelRock_Down10",
     "NavelRock_Down11",
     "NavelRock_Bottom",
-    "TrainerHill_Elevator"
+    "TrainerHill_Elevator",
+    "NavelRock_Fork_Open",
+    "NavelRock_UnownChamber",
+    "NavelRock_Unown_Room_1",
+    "NavelRock_Unown_Room_2"
   ],
   "gMapGroup_IndoorRoute104Prototype": [
     "Route104_Prototype",

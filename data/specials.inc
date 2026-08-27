@@ -639,3 +639,12 @@ gSpecials::
 	def_special UpdateTrainerCardPhotoIcons
 	def_special StickerManGetBragFlags
 	def_special CheckAddCoins
+
+@ Script dei leggendari importati
+	def_special CheckPkm
+	def_special SetHpStat
+	def_special SetAtkStat
+	def_special SetDefStat
+	def_special SetSpdStat
+	def_special SetSpAtkStat
+	def_special SetSpDefStat

@@ -5779,3 +5779,72 @@ bool8 CheckAddCoins(void)
     else
         return TRUE;
 }
+
+// Portate dalla hack: usate dagli script dei leggendari per scalarne le statistiche
+void CheckPkm(void)
+{
+    u8 i;
+    u16 species;
+    struct Pokemon *pokemon;
+    for (i = 0; i < CalculatePlayerPartyCount(); i++)
+    {
+        pokemon = &gPlayerParty[i];
+        if (GetMonData(pokemon, MON_DATA_SANITY_HAS_SPECIES) && !GetMonData(pokemon, MON_DATA_IS_EGG))
+        {
+            species = GetMonData(pokemon, MON_DATA_SPECIES);
+            if ((species == gSpecialVar_0x8005) || (species == gSpecialVar_0x8000) || 
+            (species == gSpecialVar_0x8001) || (species == gSpecialVar_0x8002))
+            {
+                gSpecialVar_Result = TRUE;
+                return;
+            }
+            else
+            {
+                gSpecialVar_Result = FALSE;
+            }
+        }
+    }
+}
+
+// Sets the HP Stat of the Pokémon according to the current value of var 0x8000 
+void SetHpStat(void)
+{
+    u16 HpStat = gSpecialVar_0x8000;
+    SetMonData(&gEnemyParty[0], MON_DATA_HP, &HpStat);
+    SetMonData(&gEnemyParty[0], MON_DATA_MAX_HP, &HpStat);
+}
+
+// Sets the Atk Stat of the Pokémon according to the current value of var 0x8001
+void SetAtkStat(void)
+{
+    u16 AtkStat = gSpecialVar_0x8001;
+    SetMonData(&gEnemyParty[0], MON_DATA_ATK, &AtkStat);
+}
+
+// Sets the Def Stat of the Pokémon according to the current value of var 0x8002
+void SetDefStat(void)
+{
+    u16 DefStat = gSpecialVar_0x8002;
+    SetMonData(&gEnemyParty[0], MON_DATA_DEF, &DefStat);
+}
+
+// Sets the Spd Stat of the Pokémon according to the current value of var 0x8003
+void SetSpdStat(void)
+{
+    u16 SpdStat = gSpecialVar_0x8003;
+    SetMonData(&gEnemyParty[0], MON_DATA_SPEED, &SpdStat);
+}
+
+// Sets the SpAtk Stat of the Pokémon according to the current value of var 0x8005
+void SetSpAtkStat(void)
+{
+    u16 SpAtkStat = gSpecialVar_0x8005;
+    SetMonData(&gEnemyParty[0], MON_DATA_SPATK, &SpAtkStat);
+}
+
+// Sets the SpDef Stat of the Pokémon according to the current value of var 0x8006
+void SetSpDefStat(void)
+{
+    u16 SpDefStat = gSpecialVar_0x8006;
+    SetMonData(&gEnemyParty[0], MON_DATA_SPDEF, &SpDefStat);
+}

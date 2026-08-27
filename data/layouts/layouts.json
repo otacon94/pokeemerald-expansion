@@ -9323,6 +9323,149 @@
       "border_filepath": "data/layouts/OneIsland_KindleRoad_EmberSpa_Frlg/border.bin",
       "blockdata_filepath": "data/layouts/OneIsland_KindleRoad_EmberSpa_Frlg/map.bin",
       "layout_version": "frlg"
+    },
+    {
+      "id": "LAYOUT_SHOAL_CAVE_LOW_TIDE_ICE_ROOM_SUICUNE",
+      "name": "ShoalCave_LowTideIceRoom_Suicune_Layout",
+      "width": 40,
+      "height": 40,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Cave",
+      "border_filepath": "data/layouts/ShoalCave_LowTideIceRoom_Suicune/border.bin",
+      "blockdata_filepath": "data/layouts/ShoalCave_LowTideIceRoom_Suicune/map.bin",
+      "layout_version": "emerald"
+    },
+    {
+      "id": "LAYOUT_NEW_MAUVILLE_INSIDE_RAIKOU",
+      "name": "NewMauville_Inside_Raikou_Layout",
+      "width": 52,
+      "height": 33,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_BikeShop",
+      "border_filepath": "data/layouts/NewMauville_Inside_Raikou/border.bin",
+      "blockdata_filepath": "data/layouts/NewMauville_Inside_Raikou/map.bin",
+      "layout_version": "emerald"
+    },
+    {
+      "id": "LAYOUT_MAGMA_HIDEOUT_3F_1R_ENTEI",
+      "name": "MagmaHideout_3F_1R_Entei_Layout",
+      "width": 44,
+      "height": 24,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Lavaridge",
+      "border_filepath": "data/layouts/MagmaHideout_3F_1R_Entei/border.bin",
+      "blockdata_filepath": "data/layouts/MagmaHideout_3F_1R_Entei/map.bin",
+      "layout_version": "emerald"
+    },
+    {
+      "id": "LAYOUT_CERULEAN_CAVE1",
+      "name": "CeruleanCave1_Layout",
+      "width": 39,
+      "height": 23,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Cave",
+      "border_filepath": "data/layouts/CeruleanCave1/border.bin",
+      "blockdata_filepath": "data/layouts/CeruleanCave1/map.bin",
+      "layout_version": "emerald"
+    },
+    {
+      "id": "LAYOUT_CERULEAN_CAVE2",
+      "name": "CeruleanCave2_Layout",
+      "width": 39,
+      "height": 23,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Cave",
+      "border_filepath": "data/layouts/CeruleanCave2/border.bin",
+      "blockdata_filepath": "data/layouts/CeruleanCave2/map.bin",
+      "layout_version": "emerald"
+    },
+    {
+      "id": "LAYOUT_CERULEAN_CAVE3",
+      "name": "CeruleanCave3_Layout",
+      "width": 40,
+      "height": 23,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Cave",
+      "border_filepath": "data/layouts/CeruleanCave3/border.bin",
+      "blockdata_filepath": "data/layouts/CeruleanCave3/map.bin",
+      "layout_version": "emerald"
+    },
+    {
+      "id": "LAYOUT_VICTORY_ROAD_MOLTRES",
+      "name": "VictoryRoad_Moltres_Layout",
+      "width": 20,
+      "height": 20,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Cave",
+      "border_filepath": "data/layouts/VictoryRoad_Moltres/border.bin",
+      "blockdata_filepath": "data/layouts/VictoryRoad_Moltres/map.bin",
+      "layout_version": "emerald"
+    },
+    {
+      "id": "LAYOUT_VICTORY_ROAD_MOLTRES2",
+      "name": "VictoryRoad_Moltres2_Layout",
+      "width": 20,
+      "height": 20,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Cave",
+      "border_filepath": "data/layouts/VictoryRoad_Moltres2/border.bin",
+      "blockdata_filepath": "data/layouts/VictoryRoad_Moltres2/map.bin",
+      "layout_version": "emerald"
+    },
+    {
+      "id": "LAYOUT_METEOR_FALLS_ARTICUNO",
+      "name": "MeteorFalls_Articuno_Layout",
+      "width": 20,
+      "height": 20,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_Pacifidlog",
+      "border_filepath": "data/layouts/MeteorFalls_Articuno/border.bin",
+      "blockdata_filepath": "data/layouts/MeteorFalls_Articuno/map.bin",
+      "layout_version": "emerald"
+    },
+    {
+      "id": "LAYOUT_NAVEL_ROCK_FORK_OPEN",
+      "name": "NavelRock_Fork_Open_Layout",
+      "width": 40,
+      "height": 30,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_NavelRock",
+      "border_filepath": "data/layouts/NavelRock_Fork_Open/border.bin",
+      "blockdata_filepath": "data/layouts/NavelRock_Fork_Open/map.bin",
+      "layout_version": "emerald"
+    },
+    {
+      "id": "LAYOUT_NAVEL_ROCK_UNOWN_CHAMBER",
+      "name": "NavelRock_UnownChamber_Layout",
+      "width": 25,
+      "height": 21,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_NavelRock",
+      "border_filepath": "data/layouts/NavelRock_UnownChamber/border.bin",
+      "blockdata_filepath": "data/layouts/NavelRock_UnownChamber/map.bin",
+      "layout_version": "emerald"
+    },
+    {
+      "id": "LAYOUT_NAVEL_ROCK_UNOWN_ROOM_1",
+      "name": "NavelRock_Unown_Room_1_Layout",
+      "width": 3,
+      "height": 80,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_NavelRock",
+      "border_filepath": "data/layouts/NavelRock_Unown_Room_1/border.bin",
+      "blockdata_filepath": "data/layouts/NavelRock_Unown_Room_1/map.bin",
+      "layout_version": "emerald"
+    },
+    {
+      "id": "LAYOUT_NAVEL_ROCK_UNOWN_ROOM_2",
+      "name": "NavelRock_Unown_Room_2_Layout",
+      "width": 1,
+      "height": 1,
+      "primary_tileset": "gTileset_General",
+      "secondary_tileset": "gTileset_NavelRock",
+      "border_filepath": "data/layouts/NavelRock_Unown_Room_2/border.bin",
+      "blockdata_filepath": "data/layouts/NavelRock_Unown_Room_2/map.bin",
+      "layout_version": "emerald"
     }
   ]
 }

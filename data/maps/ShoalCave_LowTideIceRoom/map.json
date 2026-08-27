@@ -49,6 +49,13 @@
       "elevation": 3,
       "dest_map": "MAP_SHOAL_CAVE_LOW_TIDE_LOWER_ROOM",
       "dest_warp_id": "3"
+    },
+    {
+      "x": 12,
+      "y": 1,
+      "elevation": 0,
+      "dest_map": "MAP_SHOAL_CAVE_LOW_TIDE_ICE_ROOM_SUICUNE",
+      "dest_warp_id": "0"
     }
   ],
   "coord_events": [],

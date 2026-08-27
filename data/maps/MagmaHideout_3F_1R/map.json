@@ -76,6 +76,13 @@
       "elevation": 0,
       "dest_map": "MAP_MAGMA_HIDEOUT_2F_1R",
       "dest_warp_id": "2"
+    },
+    {
+      "x": 6,
+      "y": 13,
+      "elevation": 0,
+      "dest_map": "MAP_MAGMA_HIDEOUT_3F_1R_ENTEI",
+      "dest_warp_id": "0"
     }
   ],
   "coord_events": [],

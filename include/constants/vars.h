@@ -97,7 +97,7 @@
 #define VAR_POKELOT_RND1                                 0x404B
 #define VAR_POKELOT_RND2                                 0x404C
 #define VAR_POKELOT_PRIZE_PLACE                          0x404D
-#define VAR_UNUSED_0x404E                                0x404E // Unused Var
+#define VAR_ENCOUNTER_MODE                               0x404E // Wild encounter table set: see enum EncounterMode
 #define VAR_LOTAD_SIZE_RECORD                            0x404F
 #define VAR_LITTLEROOT_TOWN_STATE                        0x4050
 #define VAR_OLDALE_TOWN_STATE                            0x4051
@@ -337,5 +337,14 @@
 #define TESTING_VAR_UNUSED_6                (TESTING_VARS_START + 0x6)
 #define TESTING_VAR_UNUSED_7                (TESTING_VARS_START + 0x7)
 #endif // TESTING
+
+
+// Var degli eventi leggendari importati dalla hack
+#define VAR_ENTEI_EVENT                                  VAR_UNUSED_0x4083
+#define VAR_RAIKOU_EVENT                                 VAR_UNUSED_0x408B
+#define VAR_SUICUNE_EVENT                                VAR_UNUSED_0x4091
+#define VAR_TEST                                         VAR_UNUSED_0x409B
+#define VAR_TEST_DARK                                    VAR_UNUSED_0x409D
+#define VAR_UNOWN_CHAMBER_STATE                          VAR_UNUSED_0x40A1
 
 #endif // GUARD_CONSTANTS_VARS_H

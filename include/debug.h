@@ -28,4 +28,6 @@ void DebugNative_Storage_ReleaseMon(void);
 extern EWRAM_DATA bool8 gIsDebugBattle;
 extern EWRAM_DATA u64 gDebugAIFlags;
 
+
+void DebugPkmCreator_Init(u8 mode, u8 index);
 #endif // GUARD_DEBUG_H

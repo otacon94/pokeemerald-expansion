@@ -303,6 +303,10 @@ static void DebugAction_Party_ClearParty(u8 taskId);
 static void DebugAction_Party_SetParty(u8 taskId);
 static void DebugAction_Party_BattleSingle(u8 taskId);
 
+static void DebugAction_PkmCreator_Party_Add(u8 taskId);
+static void DebugAction_PkmCreator_Party_Edit(u8 taskId);
+static void DebugAction_PkmCreator_PC_Edit(u8 taskId);
+
 static void DebugAction_Trainers_ChooseFromMap(u8 taskId);
 static void DebugAction_Trainers_ChooseTrainer(u8 taskId, void *selection);
 static void DebugAction_Trainers_SwitchDoublesFlag(u8 taskId);
@@ -643,12 +647,21 @@ static const struct DebugMenuOption sDebugMenu_Actions_EditPokemon[] =
     { NULL }
 };
 
+static const struct DebugMenuOption sDebugMenu_Actions_PkmCreator[] =
+{
+    { COMPOUND_STRING("Party add"),          DebugAction_PkmCreator_Party_Add },
+    { COMPOUND_STRING("Party edit"),         DebugAction_PkmCreator_Party_Edit },
+    { COMPOUND_STRING("PC edit"),            DebugAction_PkmCreator_PC_Edit },
+    { NULL }
+};
+
 static const struct DebugMenuOption sDebugMenu_Actions_Party[] =
 {
     { COMPOUND_STRING("Move Relearner"),     DebugAction_ExecuteScript, Common_EventScript_MoveRelearner },
     { COMPOUND_STRING("Hatch an Egg"),       DebugAction_ExecuteScript, Debug_HatchAnEgg },
     { COMPOUND_STRING("Heal party"),         DebugAction_Party_HealParty },
     { COMPOUND_STRING("Edit Pokemon"),       DebugAction_OpenSubMenu, sDebugMenu_Actions_EditPokemon },
+    { COMPOUND_STRING("Pokémon Creator…"),  DebugAction_OpenSubMenu, sDebugMenu_Actions_PkmCreator },
     { COMPOUND_STRING("Check EVs"),          DebugAction_ExecuteScript, Debug_EventScript_CheckEVs },
     { COMPOUND_STRING("Check IVs"),          DebugAction_ExecuteScript, Debug_EventScript_CheckIVs },
     { COMPOUND_STRING("Give Pokerus"),       DebugAction_ExecuteScript, Debug_EventScript_GivePokerus },
@@ -5576,6 +5589,29 @@ static void DebugAction_Party_SetParty(u8 taskId)
     CreateNPCTrainerPartyFromTrainer(gParties[B_TRAINER_PLAYER], &sDebugTrainers[DIFFICULTY_NORMAL][DEBUG_TRAINER_PLAYER], TRUE, BATTLE_TYPE_TRAINER);
     ScriptContext_Enable();
     Debug_DestroyMenu_Full(taskId);
+}
+
+// *******************************
+// Pokémon Creator (editor a pagine portato dalla hack)
+static void DebugAction_PkmCreator_Party_Add(u8 taskId)
+{
+    Debug_DestroyMenu_Full(taskId);
+    LockPlayerFieldControls();
+    DebugPkmCreator_Init(0, 0xFF);
+}
+
+static void DebugAction_PkmCreator_Party_Edit(u8 taskId)
+{
+    Debug_DestroyMenu_Full(taskId);
+    LockPlayerFieldControls();
+    DebugPkmCreator_Init(1, 0);
+}
+
+static void DebugAction_PkmCreator_PC_Edit(u8 taskId)
+{
+    Debug_DestroyMenu_Full(taskId);
+    LockPlayerFieldControls();
+    DebugPkmCreator_Init(2, 0);
 }
 
 static void DebugAction_Party_BattleSingle(u8 taskId)

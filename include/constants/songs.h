@@ -543,6 +543,21 @@
 #define PH_NURSE_HELD               608
 #define PH_NURSE_SOLO               609
 
+
+// Tracce DPPt/HGSS importate
+#define MUS_DP_OREBURGH_MINE        610
+#define MUS_HG_RUINS_OF_ALPH        611
+#define MUS_HG_LIGHTHOUSE           612
+#define MUS_HG_ICE_PATH             613
+#define MUS_HG_DRAGONS_DEN          614
+#define MUS_HG_VICTORY_ROAD         615
+
+#define MUS_DP_AZURE_FLUTE          616
+#define MUS_DP_HALL_OF_ORIGIN       617
+#define MUS_DP_LEGEND_APPEARS       618
+#define MUS_HG_CREDITS              619
+#define MUS_HG_RADIO_UNOWN          620
+
 #define MUS_ROUTE118                0x7FFF  // Map is split into 2 music sections. controlled by GetCurrLocationDefaultMusic().
 
 #define MUS_NONE                    0xFFFF
