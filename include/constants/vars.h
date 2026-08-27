@@ -350,4 +350,9 @@
 #define VAR_TEST_DARK                                    VAR_UNUSED_0x409D
 #define VAR_UNOWN_CHAMBER_STATE                          VAR_UNUSED_0x40A1
 
+
+// Run settings values
+#define VAR_NO_BAG_USE                                   VAR_UNUSED_0x40B8
+#define VAR_SHINY_RATE                                   VAR_UNUSED_0x40BB
+
 #endif // GUARD_CONSTANTS_VARS_H

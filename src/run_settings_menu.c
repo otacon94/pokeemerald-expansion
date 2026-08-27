@@ -11,6 +11,7 @@
 #include "scanline_effect.h"
 #include "sound.h"
 #include "sprite.h"
+#include "string_util.h"
 #include "strings.h"
 #include "task.h"
 #include "text.h"
@@ -21,17 +22,31 @@
 #include "constants/rgb.h"
 #include "constants/songs.h"
 
-#define tMenuSelection data[0]
-#define tEncounterMode data[1]
-#define tDifficulty    data[2]
+#define tSelection data[0]
+#define tPage      data[1]
 
-enum
+// Every setting is backed by a single flag or var, so nothing needs to be cached:
+// a change is applied as soon as it is made.
+enum SettingKind
 {
-    MENUITEM_ENCOUNTERS,
-    MENUITEM_DIFFICULTY,
-    MENUITEM_CANCEL,
-    MENUITEM_COUNT,
+    SETTING_FLAG,      // choice 0 = flag clear, choice 1 = flag set
+    SETTING_FLAG_INV,  // same, but the choice labels are reversed
+    SETTING_VAR,       // choice = var value
 };
+
+struct RunSetting
+{
+    const u8 *name;
+    const u8 *const *choices;
+    u8 choiceCount;
+    u8 kind;
+    u16 id;
+};
+
+#define SETTINGS_PER_PAGE 6
+#define PAGE_COUNT 3
+// The last row of every page leaves the menu
+#define ROW_DONE SETTINGS_PER_PAGE
 
 enum
 {
@@ -39,58 +54,92 @@ enum
     WIN_OPTIONS
 };
 
-#define YPOS_ENCOUNTERS (MENUITEM_ENCOUNTERS * 16)
-#define YPOS_DIFFICULTY (MENUITEM_DIFFICULTY * 16)
-
 static void Task_RunSettingsFadeIn(u8 taskId);
 static void Task_RunSettingsProcessInput(u8 taskId);
-static void Task_RunSettingsSave(u8 taskId);
 static void Task_RunSettingsFadeOut(u8 taskId);
 static void HighlightRunSettingsItem(u8 selection);
-static u8 ThreeWay_ProcessInput(u8 selection, u8 count);
-static void Encounters_DrawChoices(u8 selection);
-static void Difficulty_DrawChoices(u8 selection);
-static void DrawHeaderText(void);
-static void DrawRunSettingsTexts(void);
+static void DrawHeaderText(u8 page);
+static void DrawRunSettingsTexts(u8 page);
+static void DrawSettingValue(u8 page, u8 row);
 static void DrawBgWindowFrames(void);
+static u16 GetSettingValue(const struct RunSetting *setting);
+static void SetSettingValue(const struct RunSetting *setting, u16 value);
 
-EWRAM_DATA static bool8 sArrowPressed = FALSE;
+static const u8 sText_Header[] = _("RUN SETTINGS");
+static const u8 sText_PageOf[] = _("{STR_VAR_1}/{STR_VAR_2} {L_BUTTON}{R_BUTTON}");
+static const u8 sText_Done[]   = _("DONE");
 
-static const u8 sText_Header[]          = _("RUN SETTINGS");
-static const u8 sText_Encounters[]      = _("ENCOUNTERS");
-static const u8 sText_Difficulty[]      = _("DIFFICULTY");
-static const u8 sText_Cancel[]          = _("DONE");
+static const u8 sText_Off[]        = _("{COLOR GREEN}{SHADOW LIGHT_GREEN}OFF");
+static const u8 sText_On[]         = _("{COLOR GREEN}{SHADOW LIGHT_GREEN}ON");
+static const u8 sText_EncVanilla[] = _("{COLOR GREEN}{SHADOW LIGHT_GREEN}CLASSIC");
+static const u8 sText_EncModern[]  = _("{COLOR GREEN}{SHADOW LIGHT_GREEN}MODERN");
+static const u8 sText_EncPost[]    = _("{COLOR GREEN}{SHADOW LIGHT_GREEN}POST-GAME");
+static const u8 sText_DiffEasy[]   = _("{COLOR GREEN}{SHADOW LIGHT_GREEN}EASY");
+static const u8 sText_DiffNormal[] = _("{COLOR GREEN}{SHADOW LIGHT_GREEN}NORMAL");
+static const u8 sText_DiffHard[]   = _("{COLOR GREEN}{SHADOW LIGHT_GREEN}HARD");
+static const u8 sText_BagAlways[]  = _("{COLOR GREEN}{SHADOW LIGHT_GREEN}ALWAYS");
+static const u8 sText_BagTrainer[] = _("{COLOR GREEN}{SHADOW LIGHT_GREEN}NOT VS TRAINERS");
+static const u8 sText_BagNever[]   = _("{COLOR GREEN}{SHADOW LIGHT_GREEN}NEVER");
+static const u8 sText_ShinyNormal[]= _("{COLOR GREEN}{SHADOW LIGHT_GREEN}NORMAL");
+static const u8 sText_ShinyAlways[]= _("{COLOR GREEN}{SHADOW LIGHT_GREEN}ALWAYS");
+static const u8 sText_ShinyNever[] = _("{COLOR GREEN}{SHADOW LIGHT_GREEN}NEVER");
 
-static const u8 sText_EncVanilla[]      = _("{COLOR GREEN}{SHADOW LIGHT_GREEN}CLASSIC");
-static const u8 sText_EncModern[]       = _("{COLOR GREEN}{SHADOW LIGHT_GREEN}MODERN");
-static const u8 sText_EncPostGame[]     = _("{COLOR GREEN}{SHADOW LIGHT_GREEN}POST-GAME");
+static const u8 sName_Encounters[] = _("ENCOUNTERS");
+static const u8 sName_Difficulty[] = _("DIFFICULTY");
+static const u8 sName_LevelCap[]   = _("LEVEL CAP");
+static const u8 sName_EvCap[]      = _("EV CAP");
+static const u8 sName_ExpShare[]   = _("EXP SHARE");
+static const u8 sName_DexNav[]     = _("DEXNAV");
+static const u8 sName_SleepClause[]= _("SLEEP CLAUSE");
+static const u8 sName_Inverse[]    = _("INVERSE TYPES");
+static const u8 sName_Bag[]        = _("BAG IN BATTLE");
+static const u8 sName_Catching[]   = _("CATCHING");
+static const u8 sName_WhiteOut[]   = _("WHITE OUT");
+static const u8 sName_DoubleWild[] = _("DOUBLE WILDS");
+static const u8 sName_WildBattles[]= _("WILD BATTLES");
+static const u8 sName_ShinyRate[]  = _("SHINY RATE");
+static const u8 sName_Followers[]  = _("FOLLOWERS");
+static const u8 sName_EggMoves[]   = _("EGG MOVES");
+static const u8 sName_TutorMoves[] = _("TUTOR MOVES");
+static const u8 sName_IvEvInfo[]   = _("IV/EV INFO");
 
-static const u8 sText_DiffEasy[]        = _("{COLOR GREEN}{SHADOW LIGHT_GREEN}EASY");
-static const u8 sText_DiffNormal[]      = _("{COLOR GREEN}{SHADOW LIGHT_GREEN}NORMAL");
-static const u8 sText_DiffHard[]        = _("{COLOR GREEN}{SHADOW LIGHT_GREEN}HARD");
+static const u8 *const sChoices_OffOn[] = { sText_Off, sText_On };
+static const u8 *const sChoices_OnOff[] = { sText_On, sText_Off };
+static const u8 *const sChoices_Enc[]   = { sText_EncVanilla, sText_EncModern, sText_EncPost };
+static const u8 *const sChoices_Diff[]  = { sText_DiffEasy, sText_DiffNormal, sText_DiffHard };
+static const u8 *const sChoices_Bag[]   = { sText_BagAlways, sText_BagTrainer, sText_BagNever };
+static const u8 *const sChoices_Shiny[] = { sText_ShinyNormal, sText_ShinyAlways, sText_ShinyNever };
+
+// Page 1: how the run plays. Page 2: battle rules. Page 3: wild Pokemon and comforts.
+static const struct RunSetting sRunSettings[PAGE_COUNT][SETTINGS_PER_PAGE] =
+{
+    {
+        { sName_Encounters,  sChoices_Enc,   ARRAY_COUNT(sChoices_Enc),   SETTING_VAR,      VAR_ENCOUNTER_MODE },
+        { sName_Difficulty,  sChoices_Diff,  ARRAY_COUNT(sChoices_Diff),  SETTING_VAR,      VAR_RUN_DIFFICULTY },
+        { sName_LevelCap,    sChoices_OffOn, ARRAY_COUNT(sChoices_OffOn), SETTING_FLAG,     FLAG_LEVEL_CAP },
+        { sName_EvCap,       sChoices_OffOn, ARRAY_COUNT(sChoices_OffOn), SETTING_FLAG,     FLAG_EV_CAP },
+        { sName_ExpShare,    sChoices_OffOn, ARRAY_COUNT(sChoices_OffOn), SETTING_FLAG,     FLAG_EXP_SHARE_ON },
+        { sName_DexNav,      sChoices_OffOn, ARRAY_COUNT(sChoices_OffOn), SETTING_FLAG,     DN_FLAG_DEXNAV_GET },
+    },
+    {
+        { sName_SleepClause, sChoices_OffOn, ARRAY_COUNT(sChoices_OffOn), SETTING_FLAG,     FLAG_SLEEP_CLAUSE },
+        { sName_Inverse,     sChoices_OffOn, ARRAY_COUNT(sChoices_OffOn), SETTING_FLAG,     FLAG_INVERSE_BATTLE },
+        { sName_Bag,         sChoices_Bag,   ARRAY_COUNT(sChoices_Bag),   SETTING_VAR,      VAR_NO_BAG_USE },
+        { sName_Catching,    sChoices_OnOff, ARRAY_COUNT(sChoices_OnOff), SETTING_FLAG_INV, FLAG_NO_CATCHING },
+        { sName_WhiteOut,    sChoices_OnOff, ARRAY_COUNT(sChoices_OnOff), SETTING_FLAG_INV, FLAG_NO_WHITEOUT },
+        { sName_DoubleWild,  sChoices_OffOn, ARRAY_COUNT(sChoices_OffOn), SETTING_FLAG,     FLAG_DOUBLE_WILD },
+    },
+    {
+        { sName_WildBattles, sChoices_OnOff, ARRAY_COUNT(sChoices_OnOff), SETTING_FLAG_INV, FLAG_NO_WILD_ENCOUNTERS },
+        { sName_ShinyRate,   sChoices_Shiny, ARRAY_COUNT(sChoices_Shiny), SETTING_VAR,      VAR_SHINY_RATE },
+        { sName_Followers,   sChoices_OnOff, ARRAY_COUNT(sChoices_OnOff), SETTING_FLAG_INV, FLAG_FOLLOWERS_DISABLED },
+        { sName_EggMoves,    sChoices_OffOn, ARRAY_COUNT(sChoices_OffOn), SETTING_FLAG,     FLAG_RELEARN_EGG_MOVES },
+        { sName_TutorMoves,  sChoices_OffOn, ARRAY_COUNT(sChoices_OffOn), SETTING_FLAG,     FLAG_RELEARN_TUTOR_MOVES },
+        { sName_IvEvInfo,    sChoices_OffOn, ARRAY_COUNT(sChoices_OffOn), SETTING_FLAG,     FLAG_SUMMARY_IV_EV_INFO },
+    },
+};
 
 static const u16 sRunSettingsText_Pal[] = INCGFX_U16("graphics/interface/option_menu_text.pal", ".gbapal");
-
-static const u8 *const sRunSettingsItemNames[MENUITEM_COUNT] =
-{
-    [MENUITEM_ENCOUNTERS] = sText_Encounters,
-    [MENUITEM_DIFFICULTY] = sText_Difficulty,
-    [MENUITEM_CANCEL]     = sText_Cancel,
-};
-
-static const u8 *const sEncounterChoices[ENCOUNTER_MODE_COUNT] =
-{
-    [ENCOUNTER_MODE_VANILLA]   = sText_EncVanilla,
-    [ENCOUNTER_MODE_MODERN]    = sText_EncModern,
-    [ENCOUNTER_MODE_POST_GAME] = sText_EncPostGame,
-};
-
-static const u8 *const sDifficultyChoices[3] =
-{
-    [DIFFICULTY_EASY]   = sText_DiffEasy,
-    [DIFFICULTY_NORMAL] = sText_DiffNormal,
-    [DIFFICULTY_HARD]   = sText_DiffHard,
-};
 
 static const struct WindowTemplate sRunSettingsWinTemplates[] =
 {
@@ -214,7 +263,7 @@ void CB2_InitRunSettingsMenu(void)
         break;
     case 6:
         PutWindowTilemap(WIN_HEADER);
-        DrawHeaderText();
+        DrawHeaderText(0);
         gMain.state++;
         break;
     case 7:
@@ -222,7 +271,7 @@ void CB2_InitRunSettingsMenu(void)
         break;
     case 8:
         PutWindowTilemap(WIN_OPTIONS);
-        DrawRunSettingsTexts();
+        DrawRunSettingsTexts(0);
         gMain.state++;
     case 9:
         DrawBgWindowFrames();
@@ -232,18 +281,9 @@ void CB2_InitRunSettingsMenu(void)
     {
         u8 taskId = CreateTask(Task_RunSettingsFadeIn, 0);
 
-        gTasks[taskId].tMenuSelection = 0;
-        gTasks[taskId].tEncounterMode = VarGet(VAR_ENCOUNTER_MODE);
-        if (gTasks[taskId].tEncounterMode >= ENCOUNTER_MODE_COUNT)
-            gTasks[taskId].tEncounterMode = ENCOUNTER_MODE_VANILLA;
-        gTasks[taskId].tDifficulty = GetCurrentDifficultyLevel();
-        if (gTasks[taskId].tDifficulty > DIFFICULTY_HARD)
-            gTasks[taskId].tDifficulty = DIFFICULTY_NORMAL;
-
-        Encounters_DrawChoices(gTasks[taskId].tEncounterMode);
-        Difficulty_DrawChoices(gTasks[taskId].tDifficulty);
-        HighlightRunSettingsItem(gTasks[taskId].tMenuSelection);
-
+        gTasks[taskId].tSelection = 0;
+        gTasks[taskId].tPage = 0;
+        HighlightRunSettingsItem(0);
         CopyWindowToVram(WIN_OPTIONS, COPYWIN_FULL);
         gMain.state++;
         break;
@@ -256,85 +296,128 @@ void CB2_InitRunSettingsMenu(void)
     }
 }
 
+static u16 GetSettingValue(const struct RunSetting *setting)
+{
+    u16 value;
+
+    switch (setting->kind)
+    {
+    case SETTING_FLAG:
+    case SETTING_FLAG_INV:
+        return FlagGet(setting->id) ? 1 : 0;
+    case SETTING_VAR:
+    default:
+        value = VarGet(setting->id);
+        return value < setting->choiceCount ? value : 0;
+    }
+}
+
+static void SetSettingValue(const struct RunSetting *setting, u16 value)
+{
+    switch (setting->kind)
+    {
+    case SETTING_FLAG:
+    case SETTING_FLAG_INV:
+        if (value)
+            FlagSet(setting->id);
+        else
+            FlagClear(setting->id);
+        break;
+    case SETTING_VAR:
+        VarSet(setting->id, value);
+        break;
+    }
+
+    // Two settings drive more than the flag or var they are stored in
+    if (setting->id == VAR_RUN_DIFFICULTY)
+    {
+        if (value == DIFFICULTY_HARD)
+            FlagSet(FLAG_DIFFICULTY_HARD);
+        else
+            FlagClear(FLAG_DIFFICULTY_HARD);
+    }
+    else if (setting->id == VAR_SHINY_RATE)
+    {
+        FlagClear(FLAG_FORCE_SHINY);
+        FlagClear(FLAG_FORCE_NO_SHINY);
+        if (value == 1)
+            FlagSet(FLAG_FORCE_SHINY);
+        else if (value == 2)
+            FlagSet(FLAG_FORCE_NO_SHINY);
+    }
+}
+
 static void Task_RunSettingsFadeIn(u8 taskId)
 {
     if (!gPaletteFade.active)
         gTasks[taskId].func = Task_RunSettingsProcessInput;
 }
 
+static void ChangePage(u8 taskId, s8 delta)
+{
+    gTasks[taskId].tPage = (gTasks[taskId].tPage + PAGE_COUNT + delta) % PAGE_COUNT;
+    gTasks[taskId].tSelection = 0;
+    DrawHeaderText(gTasks[taskId].tPage);
+    DrawRunSettingsTexts(gTasks[taskId].tPage);
+    HighlightRunSettingsItem(0);
+    PlaySE(SE_SELECT);
+}
+
+static void CloseMenu(u8 taskId)
+{
+    FlagSet(FLAG_RUN_SETTINGS_SET);
+    BeginNormalPaletteFade(PALETTES_ALL, 0, 0, 16, RGB_BLACK);
+    gTasks[taskId].func = Task_RunSettingsFadeOut;
+}
+
 static void Task_RunSettingsProcessInput(u8 taskId)
 {
-    if (JOY_NEW(A_BUTTON))
+    u8 page = gTasks[taskId].tPage;
+    u8 row = gTasks[taskId].tSelection;
+    const struct RunSetting *setting;
+    u16 value;
+
+    if (JOY_NEW(A_BUTTON) && row == ROW_DONE)
     {
-        if (gTasks[taskId].tMenuSelection == MENUITEM_CANCEL)
-            gTasks[taskId].func = Task_RunSettingsSave;
+        CloseMenu(taskId);
     }
     else if (JOY_NEW(B_BUTTON))
     {
-        gTasks[taskId].func = Task_RunSettingsSave;
+        CloseMenu(taskId);
+    }
+    else if (JOY_NEW(L_BUTTON))
+    {
+        ChangePage(taskId, -1);
+    }
+    else if (JOY_NEW(R_BUTTON))
+    {
+        ChangePage(taskId, 1);
     }
     else if (JOY_NEW(DPAD_UP))
     {
-        if (gTasks[taskId].tMenuSelection > 0)
-            gTasks[taskId].tMenuSelection--;
-        else
-            gTasks[taskId].tMenuSelection = MENUITEM_CANCEL;
-        HighlightRunSettingsItem(gTasks[taskId].tMenuSelection);
+        gTasks[taskId].tSelection = (row == 0) ? ROW_DONE : row - 1;
+        HighlightRunSettingsItem(gTasks[taskId].tSelection);
     }
     else if (JOY_NEW(DPAD_DOWN))
     {
-        if (gTasks[taskId].tMenuSelection < MENUITEM_CANCEL)
-            gTasks[taskId].tMenuSelection++;
-        else
-            gTasks[taskId].tMenuSelection = 0;
-        HighlightRunSettingsItem(gTasks[taskId].tMenuSelection);
+        gTasks[taskId].tSelection = (row == ROW_DONE) ? 0 : row + 1;
+        HighlightRunSettingsItem(gTasks[taskId].tSelection);
     }
-    else
+    else if (row != ROW_DONE && (JOY_NEW(DPAD_LEFT) || JOY_NEW(DPAD_RIGHT)))
     {
-        u8 previousOption;
+        setting = &sRunSettings[page][row];
+        value = GetSettingValue(setting);
 
-        switch (gTasks[taskId].tMenuSelection)
-        {
-        case MENUITEM_ENCOUNTERS:
-            previousOption = gTasks[taskId].tEncounterMode;
-            gTasks[taskId].tEncounterMode = ThreeWay_ProcessInput(gTasks[taskId].tEncounterMode, ENCOUNTER_MODE_COUNT);
+        if (JOY_NEW(DPAD_RIGHT))
+            value = (value + 1) % setting->choiceCount;
+        else
+            value = (value + setting->choiceCount - 1) % setting->choiceCount;
 
-            if (previousOption != gTasks[taskId].tEncounterMode)
-                Encounters_DrawChoices(gTasks[taskId].tEncounterMode);
-            break;
-        case MENUITEM_DIFFICULTY:
-            previousOption = gTasks[taskId].tDifficulty;
-            gTasks[taskId].tDifficulty = ThreeWay_ProcessInput(gTasks[taskId].tDifficulty, DIFFICULTY_HARD + 1);
-
-            if (previousOption != gTasks[taskId].tDifficulty)
-                Difficulty_DrawChoices(gTasks[taskId].tDifficulty);
-            break;
-        default:
-            return;
-        }
-
-        if (sArrowPressed)
-        {
-            sArrowPressed = FALSE;
-            CopyWindowToVram(WIN_OPTIONS, COPYWIN_GFX);
-        }
+        SetSettingValue(setting, value);
+        DrawSettingValue(page, row);
+        CopyWindowToVram(WIN_OPTIONS, COPYWIN_GFX);
+        PlaySE(SE_SELECT);
     }
-}
-
-static void Task_RunSettingsSave(u8 taskId)
-{
-    VarSet(VAR_ENCOUNTER_MODE, gTasks[taskId].tEncounterMode);
-    SetCurrentDifficultyLevel(gTasks[taskId].tDifficulty);
-    FlagSet(FLAG_RUN_SETTINGS_SET);
-
-    // The imported legendary scripts read this flag to scale their stats
-    if (gTasks[taskId].tDifficulty == DIFFICULTY_HARD)
-        FlagSet(FLAG_DIFFICULTY_HARD);
-    else
-        FlagClear(FLAG_DIFFICULTY_HARD);
-
-    BeginNormalPaletteFade(PALETTES_ALL, 0, 0, 16, RGB_BLACK);
-    gTasks[taskId].func = Task_RunSettingsFadeOut;
 }
 
 static void Task_RunSettingsFadeOut(u8 taskId)
@@ -353,98 +436,41 @@ static void HighlightRunSettingsItem(u8 index)
     SetGpuReg(REG_OFFSET_WIN0V, WIN_RANGE(index * 16 + 40, index * 16 + 56));
 }
 
-static void DrawChoice(const u8 *text, u8 x, u8 y, u8 style)
+// Only the current choice is drawn, right aligned, so even long labels fit
+static void DrawSettingValue(u8 page, u8 row)
 {
-    u8 dst[16];
-    u16 i;
+    const struct RunSetting *setting = &sRunSettings[page][row];
+    const u8 *text = setting->choices[GetSettingValue(setting)];
+    u8 y = row * 16;
 
-    for (i = 0; *text != EOS && i <= 14; i++)
-    {
-        dst[i] = *text;
-        text++;
-    }
-
-    if (style != 0)
-    {
-        dst[2] = TEXT_COLOR_RED;
-        dst[4] = TEXT_COLOR_LIGHT_RED;
-    }
-
-    dst[i] = EOS;
-    AddTextPrinterParameterized(WIN_OPTIONS, FONT_NORMAL, dst, x, y + 1, TEXT_SKIP_DRAW, NULL);
+    FillWindowPixelRect(WIN_OPTIONS, PIXEL_FILL(1), 96, y, 104, 16);
+    AddTextPrinterParameterized(WIN_OPTIONS, FONT_NORMAL, text,
+                                GetStringRightAlignXOffset(FONT_NORMAL, text, 198), y + 1, TEXT_SKIP_DRAW, NULL);
 }
 
-static u8 ThreeWay_ProcessInput(u8 selection, u8 count)
-{
-    if (JOY_NEW(DPAD_RIGHT))
-    {
-        if (selection < count - 1)
-            selection++;
-        else
-            selection = 0;
-
-        sArrowPressed = TRUE;
-    }
-    if (JOY_NEW(DPAD_LEFT))
-    {
-        if (selection != 0)
-            selection--;
-        else
-            selection = count - 1;
-
-        sArrowPressed = TRUE;
-    }
-    return selection;
-}
-
-// Draws three choices side by side: left, middle, and right aligned to the edge
-static void DrawThreeChoices(const u8 *const *choices, u8 selection, u8 y)
-{
-    s32 widthLeft, widthMid, widthRight, xMid;
-    u8 styles[3];
-
-    styles[0] = 0;
-    styles[1] = 0;
-    styles[2] = 0;
-    styles[selection] = 1;
-
-    DrawChoice(choices[0], 104, y, styles[0]);
-
-    widthLeft = GetStringWidth(FONT_NORMAL, choices[0], 0);
-    widthMid = GetStringWidth(FONT_NORMAL, choices[1], 0);
-    widthRight = GetStringWidth(FONT_NORMAL, choices[2], 0);
-
-    widthMid -= 94;
-    xMid = (widthLeft - widthMid - widthRight) / 2 + 104;
-    DrawChoice(choices[1], xMid, y, styles[1]);
-
-    DrawChoice(choices[2], GetStringRightAlignXOffset(FONT_NORMAL, choices[2], 198), y, styles[2]);
-}
-
-static void Encounters_DrawChoices(u8 selection)
-{
-    DrawThreeChoices(sEncounterChoices, selection, YPOS_ENCOUNTERS);
-}
-
-static void Difficulty_DrawChoices(u8 selection)
-{
-    DrawThreeChoices(sDifficultyChoices, selection, YPOS_DIFFICULTY);
-}
-
-static void DrawHeaderText(void)
+static void DrawHeaderText(u8 page)
 {
     FillWindowPixelBuffer(WIN_HEADER, PIXEL_FILL(1));
     AddTextPrinterParameterized(WIN_HEADER, FONT_NORMAL, sText_Header, 8, 1, TEXT_SKIP_DRAW, NULL);
+    ConvertIntToDecimalStringN(gStringVar1, page + 1, STR_CONV_MODE_LEFT_ALIGN, 1);
+    ConvertIntToDecimalStringN(gStringVar2, PAGE_COUNT, STR_CONV_MODE_LEFT_ALIGN, 1);
+    StringExpandPlaceholders(gStringVar4, sText_PageOf);
+    AddTextPrinterParameterized(WIN_HEADER, FONT_NORMAL, gStringVar4,
+                                GetStringRightAlignXOffset(FONT_NORMAL, gStringVar4, 198), 1, TEXT_SKIP_DRAW, NULL);
     CopyWindowToVram(WIN_HEADER, COPYWIN_FULL);
 }
 
-static void DrawRunSettingsTexts(void)
+static void DrawRunSettingsTexts(u8 page)
 {
     u8 i;
 
     FillWindowPixelBuffer(WIN_OPTIONS, PIXEL_FILL(1));
-    for (i = 0; i < MENUITEM_COUNT; i++)
-        AddTextPrinterParameterized(WIN_OPTIONS, FONT_NORMAL, sRunSettingsItemNames[i], 8, (i * 16) + 1, TEXT_SKIP_DRAW, NULL);
+    for (i = 0; i < SETTINGS_PER_PAGE; i++)
+    {
+        AddTextPrinterParameterized(WIN_OPTIONS, FONT_NORMAL, sRunSettings[page][i].name, 8, (i * 16) + 1, TEXT_SKIP_DRAW, NULL);
+        DrawSettingValue(page, i);
+    }
+    AddTextPrinterParameterized(WIN_OPTIONS, FONT_NORMAL, sText_Done, 8, (ROW_DONE * 16) + 1, TEXT_SKIP_DRAW, NULL);
     CopyWindowToVram(WIN_OPTIONS, COPYWIN_FULL);
 }
 
@@ -481,8 +507,8 @@ static void DrawBgWindowFrames(void)
     CopyBgTilemapBufferToVram(1);
 }
 
-// Saves made before the difficulty var was enabled hold 0 in it, which reads as
-// DIFFICULTY_EASY. Anything that never went through this menu is set to Normal,
+// Saves made before these settings existed hold 0 in the difficulty var, which reads
+// as DIFFICULTY_EASY. Anything that never went through this menu is set to Normal,
 // the level those saves were played at.
 void RunSettings_EnsureInitialized(void)
 {

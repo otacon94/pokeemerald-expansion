@@ -1684,6 +1684,24 @@
 // treated as Easy (difficulty 0) after the difficulty var was enabled
 #define FLAG_RUN_SETTINGS_SET            FLAG_UNUSED_0x040
 
+
+// Run settings toggles, driven by the run settings menu
+#define FLAG_LEVEL_CAP                   FLAG_UNUSED_0x041
+#define FLAG_EV_CAP                      FLAG_UNUSED_0x042
+#define FLAG_EXP_SHARE_ON                FLAG_UNUSED_0x043
+#define FLAG_SLEEP_CLAUSE                FLAG_UNUSED_0x044
+#define FLAG_INVERSE_BATTLE              FLAG_UNUSED_0x045
+#define FLAG_NO_WHITEOUT                 FLAG_UNUSED_0x046
+#define FLAG_DOUBLE_WILD                 FLAG_UNUSED_0x047
+#define FLAG_SMART_WILD_AI               FLAG_UNUSED_0x048
+#define FLAG_FOLLOWERS_DISABLED          FLAG_UNUSED_0x049
+#define FLAG_RELEARN_EGG_MOVES           FLAG_UNUSED_0x04A
+#define FLAG_RELEARN_TUTOR_MOVES         FLAG_UNUSED_0x04B
+#define FLAG_SUMMARY_IV_EV_INFO          FLAG_UNUSED_0x04C
+#define FLAG_FORCE_SHINY                 FLAG_UNUSED_0x04D
+#define FLAG_FORCE_NO_SHINY              FLAG_UNUSED_0x04E
+#define FLAG_NO_WILD_ENCOUNTERS          FLAG_UNUSED_0x04F
+
 #define FLAGS_COUNT (DAILY_FLAGS_END + 1)
 
 // Special Flags (Stored in EWRAM (sSpecialFlags), not in the SaveBlock)

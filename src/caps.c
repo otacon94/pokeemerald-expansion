@@ -7,6 +7,10 @@
 
 u32 GetCurrentLevelCap(void)
 {
+    // Runtime switch driven by the run settings menu
+    if (!FlagGet(FLAG_LEVEL_CAP))
+        return MAX_LEVEL;
+
     static const u32 sLevelCapFlagMap[][2] =
     {
         {FLAG_BADGE01_GET, 15},
@@ -84,6 +88,10 @@ u32 GetSoftLevelCapExpValue(u32 level, u32 expValue)
 
 u32 GetCurrentEVCap(void)
 {
+    // Runtime switch driven by the run settings menu
+    if (!FlagGet(FLAG_EV_CAP))
+        return MAX_TOTAL_EVS;
+
     static const u16 sEvCapFlagMap[][2] = {
         // Define EV caps for each milestone
         {FLAG_BADGE01_GET, MAX_TOTAL_EVS *  1 / 17},
