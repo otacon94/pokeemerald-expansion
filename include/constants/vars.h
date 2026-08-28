@@ -353,6 +353,8 @@
 
 // Run settings values
 #define VAR_NO_BAG_USE                                   VAR_UNUSED_0x40B8
+#define VAR_EV_CAP_MODE                                  VAR_UNUSED_0x40DB
+#define VAR_SHINY_ODDS                                   VAR_UNUSED_0x40DC
 #define VAR_SHINY_RATE                                   VAR_UNUSED_0x40BB
 
 #endif // GUARD_CONSTANTS_VARS_H

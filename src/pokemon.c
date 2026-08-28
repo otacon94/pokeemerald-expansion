@@ -863,6 +863,20 @@ void CreateMonWithIVs(struct Pokemon *mon, enum Species species, u8 level, u32 p
     CalculateMonStats(mon);
 }
 
+// Shiny odds picked in the run settings menu. Only the roll uses this: whether an
+// existing Pokemon reads as shiny always uses SHINY_ODDS, so changing the setting
+// never turns a Pokemon you already own shiny or plain.
+u32 GetShinyOddsThreshold(void)
+{
+    static const u16 sShinyOdds[] = { SHINY_ODDS, 16, 32, 64, 128 };
+    u32 setting = VarGet(VAR_SHINY_ODDS);
+
+    if (setting >= ARRAY_COUNT(sShinyOdds))
+        setting = 0;
+
+    return sShinyOdds[setting];
+}
+
 bool32 ComputePlayerShinyOdds(u32 personality, u32 value)
 {
     if (P_FLAG_FORCE_NO_SHINY != 0 && FlagGet(P_FLAG_FORCE_NO_SHINY))
@@ -890,13 +904,13 @@ bool32 ComputePlayerShinyOdds(u32 personality, u32 value)
     if (gDexNavSpecies)
         totalRerolls += CalculateDexNavShinyRolls();
 
-    while (GET_SHINY_VALUE(value, personality) >= SHINY_ODDS && totalRerolls > 0)
+    while (GET_SHINY_VALUE(value, personality) >= GetShinyOddsThreshold() && totalRerolls > 0)
     {
         personality = Random32();
         totalRerolls--;
     }
 
-    return GET_SHINY_VALUE(value, personality) < SHINY_ODDS;
+    return GET_SHINY_VALUE(value, personality) < GetShinyOddsThreshold();
 }
 
 void SetBoxMonIVs(struct BoxPokemon *mon, u8 fixedIV)

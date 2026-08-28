@@ -37,21 +37,23 @@ enum SettingKind
 struct RunSetting
 {
     const u8 *name;
+    const u8 *description;
     const u8 *const *choices;
     u8 choiceCount;
     u8 kind;
     u16 id;
 };
 
-#define SETTINGS_PER_PAGE 6
-#define PAGE_COUNT 3
+#define SETTINGS_PER_PAGE 5
+#define PAGE_COUNT 4
 // The last row of every page leaves the menu
 #define ROW_DONE SETTINGS_PER_PAGE
 
 enum
 {
     WIN_HEADER,
-    WIN_OPTIONS
+    WIN_OPTIONS,
+    WIN_DESCRIPTION
 };
 
 static void Task_RunSettingsFadeIn(u8 taskId);
@@ -61,6 +63,7 @@ static void HighlightRunSettingsItem(u8 selection);
 static void DrawHeaderText(u8 page);
 static void DrawRunSettingsTexts(u8 page);
 static void DrawSettingValue(u8 page, u8 row);
+static void DrawDescription(u8 page, u8 row);
 static void DrawBgWindowFrames(void);
 static u16 GetSettingValue(const struct RunSetting *setting);
 static void SetSettingValue(const struct RunSetting *setting, u16 value);
@@ -80,6 +83,14 @@ static const u8 sText_DiffHard[]   = _("{COLOR GREEN}{SHADOW LIGHT_GREEN}HARD");
 static const u8 sText_BagAlways[]  = _("{COLOR GREEN}{SHADOW LIGHT_GREEN}ALWAYS");
 static const u8 sText_BagTrainer[] = _("{COLOR GREEN}{SHADOW LIGHT_GREEN}NOT VS TRAINERS");
 static const u8 sText_BagNever[]   = _("{COLOR GREEN}{SHADOW LIGHT_GREEN}NEVER");
+static const u8 sText_Shiny8192[]  = _("{COLOR GREEN}{SHADOW LIGHT_GREEN}1/8192");
+static const u8 sText_Shiny4096[]  = _("{COLOR GREEN}{SHADOW LIGHT_GREEN}1/4096");
+static const u8 sText_Shiny2048[]  = _("{COLOR GREEN}{SHADOW LIGHT_GREEN}1/2048");
+static const u8 sText_Shiny1024[]  = _("{COLOR GREEN}{SHADOW LIGHT_GREEN}1/1024");
+static const u8 sText_Shiny512[]   = _("{COLOR GREEN}{SHADOW LIGHT_GREEN}1/512");
+static const u8 sText_EvNormal[]   = _("{COLOR GREEN}{SHADOW LIGHT_GREEN}NORMAL");
+static const u8 sText_EvBadges[]   = _("{COLOR GREEN}{SHADOW LIGHT_GREEN}BY BADGES");
+static const u8 sText_EvNone[]     = _("{COLOR GREEN}{SHADOW LIGHT_GREEN}NONE");
 static const u8 sText_ShinyNormal[]= _("{COLOR GREEN}{SHADOW LIGHT_GREEN}NORMAL");
 static const u8 sText_ShinyAlways[]= _("{COLOR GREEN}{SHADOW LIGHT_GREEN}ALWAYS");
 static const u8 sText_ShinyNever[] = _("{COLOR GREEN}{SHADOW LIGHT_GREEN}NEVER");
@@ -102,6 +113,32 @@ static const u8 sName_Followers[]  = _("FOLLOWERS");
 static const u8 sName_EggMoves[]   = _("EGG MOVES");
 static const u8 sName_TutorMoves[] = _("TUTOR MOVES");
 static const u8 sName_IvEvInfo[]   = _("IV/EV INFO");
+static const u8 sName_ShinyOdds[]  = _("SHINY ODDS");
+static const u8 sName_EvGain[]     = _("EV GAIN");
+static const u8 sName_SmartAi[]    = _("SMART WILD AI");
+
+
+static const u8 sDesc_Encounters[]  = _("Which wild Pokémon tables are used.\nPOST-GAME switches after the League.");
+static const u8 sDesc_Difficulty[]  = _("Trainers use their easy, normal or hard\nteam where one is defined.");
+static const u8 sDesc_LevelCap[]    = _("Pokémon above the badge level cap\nstop gaining experience.");
+static const u8 sDesc_EvGain[]      = _("BY BADGES raises the EV limit as you\nearn badges. NONE blocks EVs entirely.");
+static const u8 sDesc_ExpShare[]    = _("The whole party gains experience,\neven Pokémon that did not fight.");
+static const u8 sDesc_DexNav[]      = _("Shows the DexNav in the start menu\nto track wild Pokémon.");
+static const u8 sDesc_SleepClause[] = _("Only one Pokémon per side can be\nasleep at a time.");
+static const u8 sDesc_Inverse[]     = _("Type match-ups are reversed:\nfire beats water, and so on.");
+static const u8 sDesc_Bag[]         = _("When the bag can be used in battle.\nItems from the party still work.");
+static const u8 sDesc_Catching[]    = _("Turn off to forbid catching\nwild Pokémon.");
+static const u8 sDesc_WhiteOut[]    = _("Turn off and losing to a trainer no\nlonger sends you back. No auto healing.");
+static const u8 sDesc_DoubleWild[]  = _("Wild Pokémon can show up in pairs\nfor double battles.");
+static const u8 sDesc_WildBattles[] = _("Turn off to walk through grass and\nwater without any wild battles.");
+static const u8 sDesc_ShinyOdds[]   = _("Chance of a wild Pokémon being shiny.\nDoes not change Pokémon you own.");
+static const u8 sDesc_ShinyRate[]   = _("ALWAYS and NEVER force every wild and\ngift Pokémon, ignoring the odds above.");
+static const u8 sDesc_Followers[]   = _("Your first Pokémon walks behind you\non the overworld.");
+static const u8 sDesc_EggMoves[]    = _("The move relearner can also teach\negg moves.");
+static const u8 sDesc_TutorMoves[]  = _("The move relearner can also teach\ntutor moves.");
+static const u8 sDesc_IvEvInfo[]    = _("Cycle stats, IVs and EVs on the\nsummary screen skills page.");
+static const u8 sDesc_SmartAi[]     = _("Wild Pokémon use the same battle AI\nas trainers.");
+static const u8 sDesc_Done[]        = _("Leave the menu. Every choice is\nsaved as soon as it is made.");
 
 static const u8 *const sChoices_OffOn[] = { sText_Off, sText_On };
 static const u8 *const sChoices_OnOff[] = { sText_On, sText_Off };
@@ -109,33 +146,43 @@ static const u8 *const sChoices_Enc[]   = { sText_EncVanilla, sText_EncModern, s
 static const u8 *const sChoices_Diff[]  = { sText_DiffEasy, sText_DiffNormal, sText_DiffHard };
 static const u8 *const sChoices_Bag[]   = { sText_BagAlways, sText_BagTrainer, sText_BagNever };
 static const u8 *const sChoices_Shiny[] = { sText_ShinyNormal, sText_ShinyAlways, sText_ShinyNever };
+static const u8 *const sChoices_ShinyOdds[] = { sText_Shiny8192, sText_Shiny4096, sText_Shiny2048, sText_Shiny1024, sText_Shiny512 };
+static const u8 *const sChoices_EvGain[] = { sText_EvNormal, sText_EvBadges, sText_EvNone };
 
 // Page 1: how the run plays. Page 2: battle rules. Page 3: wild Pokemon and comforts.
 static const struct RunSetting sRunSettings[PAGE_COUNT][SETTINGS_PER_PAGE] =
 {
+    // Page 1: how the run plays
     {
-        { sName_Encounters,  sChoices_Enc,   ARRAY_COUNT(sChoices_Enc),   SETTING_VAR,      VAR_ENCOUNTER_MODE },
-        { sName_Difficulty,  sChoices_Diff,  ARRAY_COUNT(sChoices_Diff),  SETTING_VAR,      VAR_RUN_DIFFICULTY },
-        { sName_LevelCap,    sChoices_OffOn, ARRAY_COUNT(sChoices_OffOn), SETTING_FLAG,     FLAG_LEVEL_CAP },
-        { sName_EvCap,       sChoices_OffOn, ARRAY_COUNT(sChoices_OffOn), SETTING_FLAG,     FLAG_EV_CAP },
-        { sName_ExpShare,    sChoices_OffOn, ARRAY_COUNT(sChoices_OffOn), SETTING_FLAG,     FLAG_EXP_SHARE_ON },
-        { sName_DexNav,      sChoices_OffOn, ARRAY_COUNT(sChoices_OffOn), SETTING_FLAG,     DN_FLAG_DEXNAV_GET },
+        { sName_Encounters,  sDesc_Encounters,  sChoices_Enc,       ARRAY_COUNT(sChoices_Enc),       SETTING_VAR,      VAR_ENCOUNTER_MODE },
+        { sName_Difficulty,  sDesc_Difficulty,  sChoices_Diff,      ARRAY_COUNT(sChoices_Diff),      SETTING_VAR,      VAR_RUN_DIFFICULTY },
+        { sName_LevelCap,    sDesc_LevelCap,    sChoices_OffOn,     ARRAY_COUNT(sChoices_OffOn),     SETTING_FLAG,     FLAG_LEVEL_CAP },
+        { sName_EvGain,      sDesc_EvGain,      sChoices_EvGain,    ARRAY_COUNT(sChoices_EvGain),    SETTING_VAR,      VAR_EV_CAP_MODE },
+        { sName_ExpShare,    sDesc_ExpShare,    sChoices_OffOn,     ARRAY_COUNT(sChoices_OffOn),     SETTING_FLAG,     FLAG_EXP_SHARE_ON },
     },
+    // Page 2: battle rules
     {
-        { sName_SleepClause, sChoices_OffOn, ARRAY_COUNT(sChoices_OffOn), SETTING_FLAG,     FLAG_SLEEP_CLAUSE },
-        { sName_Inverse,     sChoices_OffOn, ARRAY_COUNT(sChoices_OffOn), SETTING_FLAG,     FLAG_INVERSE_BATTLE },
-        { sName_Bag,         sChoices_Bag,   ARRAY_COUNT(sChoices_Bag),   SETTING_VAR,      VAR_NO_BAG_USE },
-        { sName_Catching,    sChoices_OnOff, ARRAY_COUNT(sChoices_OnOff), SETTING_FLAG_INV, FLAG_NO_CATCHING },
-        { sName_WhiteOut,    sChoices_OnOff, ARRAY_COUNT(sChoices_OnOff), SETTING_FLAG_INV, FLAG_NO_WHITEOUT },
-        { sName_DoubleWild,  sChoices_OffOn, ARRAY_COUNT(sChoices_OffOn), SETTING_FLAG,     FLAG_DOUBLE_WILD },
+        { sName_SleepClause, sDesc_SleepClause, sChoices_OffOn,     ARRAY_COUNT(sChoices_OffOn),     SETTING_FLAG,     FLAG_SLEEP_CLAUSE },
+        { sName_Inverse,     sDesc_Inverse,     sChoices_OffOn,     ARRAY_COUNT(sChoices_OffOn),     SETTING_FLAG,     FLAG_INVERSE_BATTLE },
+        { sName_Bag,         sDesc_Bag,         sChoices_Bag,       ARRAY_COUNT(sChoices_Bag),       SETTING_VAR,      VAR_NO_BAG_USE },
+        { sName_Catching,    sDesc_Catching,    sChoices_OnOff,     ARRAY_COUNT(sChoices_OnOff),     SETTING_FLAG_INV, FLAG_NO_CATCHING },
+        { sName_WhiteOut,    sDesc_WhiteOut,    sChoices_OnOff,     ARRAY_COUNT(sChoices_OnOff),     SETTING_FLAG_INV, FLAG_NO_WHITEOUT },
     },
+    // Page 3: wild Pokemon
     {
-        { sName_WildBattles, sChoices_OnOff, ARRAY_COUNT(sChoices_OnOff), SETTING_FLAG_INV, FLAG_NO_WILD_ENCOUNTERS },
-        { sName_ShinyRate,   sChoices_Shiny, ARRAY_COUNT(sChoices_Shiny), SETTING_VAR,      VAR_SHINY_RATE },
-        { sName_Followers,   sChoices_OnOff, ARRAY_COUNT(sChoices_OnOff), SETTING_FLAG_INV, FLAG_FOLLOWERS_DISABLED },
-        { sName_EggMoves,    sChoices_OffOn, ARRAY_COUNT(sChoices_OffOn), SETTING_FLAG,     FLAG_RELEARN_EGG_MOVES },
-        { sName_TutorMoves,  sChoices_OffOn, ARRAY_COUNT(sChoices_OffOn), SETTING_FLAG,     FLAG_RELEARN_TUTOR_MOVES },
-        { sName_IvEvInfo,    sChoices_OffOn, ARRAY_COUNT(sChoices_OffOn), SETTING_FLAG,     FLAG_SUMMARY_IV_EV_INFO },
+        { sName_WildBattles, sDesc_WildBattles, sChoices_OnOff,     ARRAY_COUNT(sChoices_OnOff),     SETTING_FLAG_INV, FLAG_NO_WILD_ENCOUNTERS },
+        { sName_DoubleWild,  sDesc_DoubleWild,  sChoices_OffOn,     ARRAY_COUNT(sChoices_OffOn),     SETTING_FLAG,     FLAG_DOUBLE_WILD },
+        { sName_SmartAi,     sDesc_SmartAi,     sChoices_OffOn,     ARRAY_COUNT(sChoices_OffOn),     SETTING_FLAG,     FLAG_SMART_WILD_AI },
+        { sName_ShinyOdds,   sDesc_ShinyOdds,   sChoices_ShinyOdds, ARRAY_COUNT(sChoices_ShinyOdds), SETTING_VAR,      VAR_SHINY_ODDS },
+        { sName_ShinyRate,   sDesc_ShinyRate,   sChoices_Shiny,     ARRAY_COUNT(sChoices_Shiny),     SETTING_VAR,      VAR_SHINY_RATE },
+    },
+    // Page 4: comforts
+    {
+        { sName_DexNav,      sDesc_DexNav,      sChoices_OffOn,     ARRAY_COUNT(sChoices_OffOn),     SETTING_FLAG,     DN_FLAG_DEXNAV_GET },
+        { sName_Followers,   sDesc_Followers,   sChoices_OnOff,     ARRAY_COUNT(sChoices_OnOff),     SETTING_FLAG_INV, FLAG_FOLLOWERS_DISABLED },
+        { sName_EggMoves,    sDesc_EggMoves,    sChoices_OffOn,     ARRAY_COUNT(sChoices_OffOn),     SETTING_FLAG,     FLAG_RELEARN_EGG_MOVES },
+        { sName_TutorMoves,  sDesc_TutorMoves,  sChoices_OffOn,     ARRAY_COUNT(sChoices_OffOn),     SETTING_FLAG,     FLAG_RELEARN_TUTOR_MOVES },
+        { sName_IvEvInfo,    sDesc_IvEvInfo,    sChoices_OffOn,     ARRAY_COUNT(sChoices_OffOn),     SETTING_FLAG,     FLAG_SUMMARY_IV_EV_INFO },
     },
 };
 
@@ -146,7 +193,7 @@ static const struct WindowTemplate sRunSettingsWinTemplates[] =
     [WIN_HEADER] = {
         .bg = 1,
         .tilemapLeft = 2,
-        .tilemapTop = 1,
+        .tilemapTop = 0,
         .width = 26,
         .height = 2,
         .paletteNum = 1,
@@ -155,11 +202,20 @@ static const struct WindowTemplate sRunSettingsWinTemplates[] =
     [WIN_OPTIONS] = {
         .bg = 0,
         .tilemapLeft = 2,
-        .tilemapTop = 5,
+        .tilemapTop = 3,
         .width = 26,
-        .height = 14,
+        .height = 10,
         .paletteNum = 1,
         .baseBlock = 0x36
+    },
+    [WIN_DESCRIPTION] = {
+        .bg = 1,
+        .tilemapLeft = 2,
+        .tilemapTop = 14,
+        .width = 26,
+        .height = 5,
+        .paletteNum = 1,
+        .baseBlock = 0x140
     },
     DUMMY_WIN_TEMPLATE
 };
@@ -271,6 +327,7 @@ void CB2_InitRunSettingsMenu(void)
         break;
     case 8:
         PutWindowTilemap(WIN_OPTIONS);
+        PutWindowTilemap(WIN_DESCRIPTION);
         DrawRunSettingsTexts(0);
         gMain.state++;
     case 9:
@@ -284,6 +341,7 @@ void CB2_InitRunSettingsMenu(void)
         gTasks[taskId].tSelection = 0;
         gTasks[taskId].tPage = 0;
         HighlightRunSettingsItem(0);
+        DrawDescription(0, 0);
         CopyWindowToVram(WIN_OPTIONS, COPYWIN_FULL);
         gMain.state++;
         break;
@@ -360,6 +418,7 @@ static void ChangePage(u8 taskId, s8 delta)
     DrawHeaderText(gTasks[taskId].tPage);
     DrawRunSettingsTexts(gTasks[taskId].tPage);
     HighlightRunSettingsItem(0);
+    DrawDescription(gTasks[taskId].tPage, 0);
     PlaySE(SE_SELECT);
 }
 
@@ -397,11 +456,13 @@ static void Task_RunSettingsProcessInput(u8 taskId)
     {
         gTasks[taskId].tSelection = (row == 0) ? ROW_DONE : row - 1;
         HighlightRunSettingsItem(gTasks[taskId].tSelection);
+        DrawDescription(page, gTasks[taskId].tSelection);
     }
     else if (JOY_NEW(DPAD_DOWN))
     {
         gTasks[taskId].tSelection = (row == ROW_DONE) ? 0 : row + 1;
         HighlightRunSettingsItem(gTasks[taskId].tSelection);
+        DrawDescription(page, gTasks[taskId].tSelection);
     }
     else if (row != ROW_DONE && (JOY_NEW(DPAD_LEFT) || JOY_NEW(DPAD_RIGHT)))
     {
@@ -430,10 +491,20 @@ static void Task_RunSettingsFadeOut(u8 taskId)
     }
 }
 
+// The description of the highlighted row, in the window under the list
+static void DrawDescription(u8 page, u8 row)
+{
+    const u8 *text = (row == ROW_DONE) ? sDesc_Done : sRunSettings[page][row].description;
+
+    FillWindowPixelBuffer(WIN_DESCRIPTION, PIXEL_FILL(1));
+    AddTextPrinterParameterized(WIN_DESCRIPTION, FONT_NORMAL, text, 8, 1, TEXT_SKIP_DRAW, NULL);
+    CopyWindowToVram(WIN_DESCRIPTION, COPYWIN_FULL);
+}
+
 static void HighlightRunSettingsItem(u8 index)
 {
     SetGpuReg(REG_OFFSET_WIN0H, WIN_RANGE(16, DISPLAY_WIDTH - 16));
-    SetGpuReg(REG_OFFSET_WIN0V, WIN_RANGE(index * 16 + 40, index * 16 + 56));
+    SetGpuReg(REG_OFFSET_WIN0V, WIN_RANGE(index * 16 + 24, index * 16 + 40));
 }
 
 // Only the current choice is drawn, right aligned, so even long labels fit
@@ -489,17 +560,21 @@ static void DrawBgWindowFrames(void)
     FillBgTilemapBufferRect(1, TILE_TOP_CORNER_L,  1,  0,  1,  1,  7);
     FillBgTilemapBufferRect(1, TILE_TOP_EDGE,      2,  0, 27,  1,  7);
     FillBgTilemapBufferRect(1, TILE_TOP_CORNER_R, 28,  0,  1,  1,  7);
-    FillBgTilemapBufferRect(1, TILE_LEFT_EDGE,     1,  1,  1,  2,  7);
-    FillBgTilemapBufferRect(1, TILE_RIGHT_EDGE,   28,  1,  1,  2,  7);
-    FillBgTilemapBufferRect(1, TILE_BOT_CORNER_L,  1,  3,  1,  1,  7);
-    FillBgTilemapBufferRect(1, TILE_BOT_EDGE,      2,  3, 27,  1,  7);
-    FillBgTilemapBufferRect(1, TILE_BOT_CORNER_R, 28,  3,  1,  1,  7);
+    FillBgTilemapBufferRect(1, TILE_LEFT_EDGE,     1,  1,  1,  1,  7);
+    FillBgTilemapBufferRect(1, TILE_RIGHT_EDGE,   28,  1,  1,  1,  7);
 
-    FillBgTilemapBufferRect(1, TILE_TOP_CORNER_L,  1,  4,  1,  1,  7);
-    FillBgTilemapBufferRect(1, TILE_TOP_EDGE,      2,  4, 26,  1,  7);
-    FillBgTilemapBufferRect(1, TILE_TOP_CORNER_R, 28,  4,  1,  1,  7);
-    FillBgTilemapBufferRect(1, TILE_LEFT_EDGE,     1,  5,  1, 18,  7);
-    FillBgTilemapBufferRect(1, TILE_RIGHT_EDGE,   28,  5,  1, 18,  7);
+    FillBgTilemapBufferRect(1, TILE_TOP_CORNER_L,  1,  2,  1,  1,  7);
+    FillBgTilemapBufferRect(1, TILE_TOP_EDGE,      2,  2, 26,  1,  7);
+    FillBgTilemapBufferRect(1, TILE_TOP_CORNER_R, 28,  2,  1,  1,  7);
+    FillBgTilemapBufferRect(1, TILE_LEFT_EDGE,     1,  3,  1, 10,  7);
+    FillBgTilemapBufferRect(1, TILE_RIGHT_EDGE,   28,  3,  1, 10,  7);
+    FillBgTilemapBufferRect(1, TILE_BOT_CORNER_L,  1, 13,  1,  1,  7);
+    FillBgTilemapBufferRect(1, TILE_BOT_EDGE,      2, 13, 26,  1,  7);
+    FillBgTilemapBufferRect(1, TILE_BOT_CORNER_R, 28, 13,  1,  1,  7);
+
+    // Description box
+    FillBgTilemapBufferRect(1, TILE_LEFT_EDGE,     1, 14,  1,  5,  7);
+    FillBgTilemapBufferRect(1, TILE_RIGHT_EDGE,   28, 14,  1,  5,  7);
     FillBgTilemapBufferRect(1, TILE_BOT_CORNER_L,  1, 19,  1,  1,  7);
     FillBgTilemapBufferRect(1, TILE_BOT_EDGE,      2, 19, 26,  1,  7);
     FillBgTilemapBufferRect(1, TILE_BOT_CORNER_R, 28, 19,  1,  1,  7);
